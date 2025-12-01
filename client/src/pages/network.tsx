@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Bot, User, Send, FileText, AlertTriangle } from "lucide-react";
@@ -109,8 +110,8 @@ export default function NetworkPage() {
 
         {/* Right Area: Analysis Panel */}
         <div className="w-[400px] h-full border-l bg-background/50 backdrop-blur flex flex-col z-20 shadow-xl">
-          {/* Node Details (Top) */}
-          <div className="p-4 border-b bg-background/80">
+          {/* Node Details (Fixed Top) */}
+          <div className="p-4 border-b bg-background/80 shrink-0">
             <h3 className="font-medium mb-4 flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" /> Node Details
             </h3>
@@ -132,65 +133,86 @@ export default function NetworkPage() {
             </div>
           </div>
 
-          {/* AI Analysis (Middle) */}
-          <div className="p-4 border-b bg-primary/5">
-            <h3 className="font-medium mb-3 flex items-center gap-2 text-primary">
-              <Bot className="w-4 h-4" /> AI Insight
-            </h3>
-            <Card className="p-3 bg-white border-primary/10 shadow-sm">
-              <div className="flex gap-2 items-start">
-                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  <strong>Anomaly Pattern Detected:</strong> High correlation (0.85) observed between Main Controller load and Sensor C warning state.
-                  Suggest checking power distribution unit for potential voltage fluctuations affecting Sensor C.
-                </p>
+          {/* Tabs Area (Flexible) */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <Tabs defaultValue="ai" className="flex-1 flex flex-col">
+              <div className="px-4 pt-4 border-b">
+                <TabsList className="w-full grid grid-cols-2">
+                  <TabsTrigger value="ai" className="text-xs">
+                    <Bot className="w-3 h-3 mr-2" /> AI Insight
+                  </TabsTrigger>
+                  <TabsTrigger value="notes" className="text-xs">
+                    <User className="w-3 h-3 mr-2" /> Team Notes
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </Card>
-          </div>
 
-          {/* Team Notes (Bottom - Flexible) */}
-          <div className="flex-1 flex flex-col min-h-0 bg-background">
-            <div className="p-4 pb-2">
-              <h3 className="font-medium flex items-center gap-2">
-                <User className="w-4 h-4" /> Team Notes
-              </h3>
-            </div>
-            
-            <ScrollArea className="flex-1 px-4">
-              <div className="space-y-3 py-2">
-                <div className="bg-muted/30 p-3 rounded-lg text-xs space-y-1">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span className="font-semibold text-foreground">Alice Engineer</span>
-                    <span>2h ago</span>
+              {/* AI Tab Content */}
+              <TabsContent value="ai" className="flex-1 p-4 m-0 overflow-y-auto">
+                <div className="space-y-4">
+                  <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+                    <div className="flex items-center gap-2 mb-3 text-primary font-medium text-sm">
+                      <AlertTriangle className="w-4 h-4" /> Anomaly Pattern Detected
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      High correlation (0.85) observed between Main Controller load and Sensor C warning state.
+                      Suggest checking power distribution unit for potential voltage fluctuations affecting Sensor C.
+                    </p>
                   </div>
-                  <p>Checked sensor C manually. Readings seem stable but slightly drifting. Will monitor.</p>
-                </div>
-                <div className="bg-muted/30 p-3 rounded-lg text-xs space-y-1">
-                  <div className="flex justify-between text-muted-foreground">
-                    <span className="font-semibold text-foreground">Bob Operator</span>
-                    <span>1d ago</span>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase">Recommended Actions</h4>
+                    <div className="text-xs space-y-2">
+                      <div className="p-2 bg-white border rounded shadow-sm flex items-start gap-2">
+                        <span className="bg-primary/10 text-primary px-1.5 rounded text-[10px] font-bold mt-0.5">1</span>
+                        <span>Inspect voltage stability on Power Unit B-2</span>
+                      </div>
+                      <div className="p-2 bg-white border rounded shadow-sm flex items-start gap-2">
+                        <span className="bg-primary/10 text-primary px-1.5 rounded text-[10px] font-bold mt-0.5">2</span>
+                        <span>Calibrate Sensor C sensitivity thresholds</span>
+                      </div>
+                    </div>
                   </div>
-                  <p>Scheduled maintenance for next Tuesday as per AI recommendation.</p>
                 </div>
-              </div>
-            </ScrollArea>
+              </TabsContent>
 
-            {/* Input Area */}
-            <div className="p-4 border-t bg-background">
-              <div className="space-y-2">
-                <Textarea 
-                  placeholder="Add your observation..." 
-                  className="min-h-[80px] text-xs resize-none focus-visible:ring-primary"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                />
-                <div className="flex justify-end">
-                  <Button size="sm" className="h-8 text-xs gap-2">
-                    <Send className="w-3 h-3" /> Save Note
-                  </Button>
+              {/* Notes Tab Content */}
+              <TabsContent value="notes" className="flex-1 flex flex-col m-0">
+                <ScrollArea className="flex-1">
+                  <div className="p-4 space-y-3">
+                    <div className="bg-muted/30 p-3 rounded-lg text-xs space-y-1">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span className="font-semibold text-foreground">Alice Engineer</span>
+                        <span>2h ago</span>
+                      </div>
+                      <p>Checked sensor C manually. Readings seem stable but slightly drifting. Will monitor.</p>
+                    </div>
+                    <div className="bg-muted/30 p-3 rounded-lg text-xs space-y-1">
+                      <div className="flex justify-between text-muted-foreground">
+                        <span className="font-semibold text-foreground">Bob Operator</span>
+                        <span>1d ago</span>
+                      </div>
+                      <p>Scheduled maintenance for next Tuesday as per AI recommendation.</p>
+                    </div>
+                  </div>
+                </ScrollArea>
+                <div className="p-4 border-t bg-background mt-auto">
+                  <div className="space-y-2">
+                    <Textarea 
+                      placeholder="Add your observation..." 
+                      className="min-h-[80px] text-xs resize-none focus-visible:ring-primary"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                    />
+                    <div className="flex justify-end">
+                      <Button size="sm" className="h-8 text-xs gap-2">
+                        <Send className="w-3 h-3" /> Save Note
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>
