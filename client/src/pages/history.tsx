@@ -299,22 +299,22 @@ export default function HistoryPage() {
               
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-4">
-                <Card>
+                <Card className="bg-background border-l-4 border-l-primary shadow-sm">
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">15,240</div>
-                    <p className="text-xs text-muted-foreground">총가공수 (Total Processed)</p>
+                    <div className="text-3xl font-bold text-primary">15,240</div>
+                    <p className="text-sm font-medium text-muted-foreground mt-1">Total Processed</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-emerald-50/50 border-l-4 border-l-emerald-500 shadow-sm">
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-emerald-600">13,716 (90%)</div>
-                    <p className="text-xs text-muted-foreground">정상제품 (Normal Products)</p>
+                    <div className="text-3xl font-bold text-emerald-700">13,716 <span className="text-lg font-medium text-emerald-600/80 ml-1">(90%)</span></div>
+                    <p className="text-sm font-medium text-emerald-600/80 mt-1">Normal Products</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="bg-red-50/50 border-l-4 border-l-destructive shadow-sm">
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-destructive">1,524 (10%)</div>
-                    <p className="text-xs text-muted-foreground">불량 제품 (Defective Products)</p>
+                    <div className="text-3xl font-bold text-destructive">1,524 <span className="text-lg font-medium text-destructive/80 ml-1">(10%)</span></div>
+                    <p className="text-sm font-medium text-destructive/80 mt-1">Defective Products</p>
                   </CardContent>
                 </Card>
               </div>
