@@ -57,7 +57,7 @@ export default function ModelsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
         
         {/* Left: Model List */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-1 space-y-6">
           <Card className="h-full">
             <CardHeader>
               <CardTitle>Available Models</CardTitle>
@@ -67,9 +67,6 @@ export default function ModelsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Model Name</TableHead>
-                    <TableHead>Version</TableHead>
-                    <TableHead>Precision</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -81,22 +78,27 @@ export default function ModelsPage() {
                       onClick={() => setSelectedModelId(model.id)}
                     >
                       <TableCell className="font-medium cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <BrainCircuit className={`w-4 h-4 ${selectedModelId === model.id ? "text-primary" : "text-muted-foreground"}`} />
-                          {model.name}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-2">
+                            <BrainCircuit className={`w-4 h-4 ${selectedModelId === model.id ? "text-primary" : "text-muted-foreground"}`} />
+                            <span className="text-sm">{model.name}</span>
+                          </div>
+                          <div className="flex gap-2 text-xs text-muted-foreground ml-6">
+                            <span>v{model.version}</span>
+                            <span>•</span>
+                            <span>{model.precision}</span>
+                            <span>•</span>
+                            <Badge variant={model.status === "Active" ? "default" : "secondary"} className="h-4 text-[10px] px-1 py-0">
+                              {model.status}
+                            </Badge>
+                          </div>
                         </div>
                       </TableCell>
-                      <TableCell>{model.version}</TableCell>
-                      <TableCell>{model.precision}</TableCell>
-                      <TableCell>
-                        <Badge variant={model.status === "Active" ? "default" : "secondary"}>
-                          {model.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right align-top pt-4">
                         <Button 
                           variant={selectedModelId === model.id ? "default" : "ghost"} 
                           size="sm"
+                          className="h-7 text-xs"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedModelId(model.id);
@@ -120,7 +122,7 @@ export default function ModelsPage() {
         </div>
 
         {/* Right: Test Bench */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           <Card className={`h-full flex flex-col transition-opacity duration-300 ${!selectedModelId ? "opacity-50 pointer-events-none grayscale" : ""}`}>
             <CardHeader className="bg-muted/20 border-b pb-4">
               <div className="flex items-center justify-between">
