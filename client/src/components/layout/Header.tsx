@@ -21,12 +21,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CalendarIcon, Bell, User, Settings, LogOut } from "lucide-react";
+import { CalendarIcon, Bell, User, Settings, LogOut, Wifi } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useFilter } from "@/lib/filter-context";
 import { Link, useLocation } from "wouter";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function Header({ title }: { title: string }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -42,6 +43,27 @@ export function Header({ title }: { title: string }) {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* System Status Indicator */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50 border border-emerald-100 mr-2 cursor-help">
+                <div className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </div>
+                <span className="text-[10px] font-medium text-emerald-700 uppercase tracking-wide">System Normal</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <div className="text-xs">
+                <p className="font-semibold">Data Collection Active</p>
+                <p className="text-muted-foreground">All sensors reporting normally</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {/* Context Selectors */}
         <div className="flex items-center gap-2 mr-4">
           <Select value={factory} onValueChange={setFactory}>
