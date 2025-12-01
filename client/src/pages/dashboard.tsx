@@ -5,7 +5,7 @@ import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Too
 
 const kpiData = [
   { title: "Equipment Status", value: "98.2%", sub: "Operational", icon: Server, color: "text-emerald-500" },
-  { title: "Active Faults", value: "3", sub: "Requires Attention", icon: AlertTriangle, color: "text-amber-500" },
+  { title: "Active Faults", value: "3", sub: "Requires Attention", icon: AlertTriangle, color: "text-destructive", isAlert: true },
   { title: "Quality Rate", value: "99.9%", sub: "+0.2% vs last week", icon: CheckCircle2, color: "text-blue-500" },
   { title: "Avg Detection Time", value: "42ms", sub: "Real-time", icon: Clock, color: "text-purple-500" },
 ];
@@ -33,16 +33,19 @@ export default function Dashboard() {
         {/* KPI Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {kpiData.map((kpi) => (
-            <Card key={kpi.title} className="shadow-sm border-border/60">
+            <Card 
+              key={kpi.title} 
+              className={`shadow-sm border-border/60 ${kpi.isAlert ? 'bg-destructive/10 border-destructive/50' : ''}`}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+                <CardTitle className={`text-sm font-medium ${kpi.isAlert ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
                   {kpi.title}
                 </CardTitle>
                 <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{kpi.value}</div>
-                <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
+                <div className={`text-2xl font-bold ${kpi.isAlert ? 'text-destructive' : ''}`}>{kpi.value}</div>
+                <p className={`text-xs mt-1 ${kpi.isAlert ? 'text-destructive/80 font-medium' : 'text-muted-foreground'}`}>{kpi.sub}</p>
               </CardContent>
             </Card>
           ))}
