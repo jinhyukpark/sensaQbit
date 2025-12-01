@@ -132,6 +132,20 @@ export default function NetworkPage() {
   const [note, setNote] = useState("");
   const [selectedNode, setSelectedNode] = useState<any>(nodes[0]);
 
+  // Calculate statistics
+  const stats = {
+    total: nodes.length,
+    controllers: nodes.filter(n => n.type === "Server" || n.type === "Controller").length,
+    equipment: nodes.filter(n => n.type === "Equipment").length,
+    sensors: nodes.filter(n => n.type === "Sensor").length,
+    faults: {
+      total: nodes.filter(n => n.status === "warning").length,
+      controllers: nodes.filter(n => (n.type === "Server" || n.type === "Controller") && n.status === "warning").length,
+      equipment: nodes.filter(n => n.type === "Equipment" && n.status === "warning").length,
+      sensors: nodes.filter(n => n.type === "Sensor" && n.status === "warning").length,
+    }
+  };
+
   return (
     <AppLayout title="Network Graph">
       <div className="relative h-full w-full overflow-hidden bg-slate-50 flex">
@@ -140,6 +154,65 @@ export default function NetworkPage() {
         <div className="flex-1 relative h-full overflow-hidden cursor-grab active:cursor-grabbing">
           {/* Controls Overlay */}
           <div className="absolute top-4 left-4 z-10 w-64 space-y-4">
+            {/* Network Status Card */}
+            <Card className="p-4 shadow-lg bg-background/90 backdrop-blur">
+              <h3 className="font-medium mb-3 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" /> Network Status
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Total Nodes</span>
+                  <span className="font-bold">{stats.total}</span>
+                </div>
+                
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                      Controllers
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {stats.faults.controllers > 0 && <span className="text-amber-500 font-bold">{stats.faults.controllers} err</span>}
+                      <span className="text-muted-foreground">{stats.controllers}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-slate-500"></div>
+                      Equipment
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {stats.faults.equipment > 0 && <span className="text-amber-500 font-bold">{stats.faults.equipment} err</span>}
+                      <span className="text-muted-foreground">{stats.equipment}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      Sensors
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {stats.faults.sensors > 0 && <span className="text-amber-500 font-bold">{stats.faults.sensors} err</span>}
+                      <span className="text-muted-foreground">{stats.sensors}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {stats.faults.total > 0 && (
+                 <div className="mt-4 pt-3 border-t flex items-center gap-2 text-xs text-amber-600 font-medium">
+                   <AlertTriangle className="w-3 h-3" />
+                   {stats.faults.total} nodes require attention
+                 </div>
+              )}
+            </Card>
+
             <Card className="p-4 shadow-lg bg-background/90 backdrop-blur">
               <h3 className="font-medium mb-4">Graph Filters</h3>
               <div className="space-y-4">
