@@ -36,14 +36,14 @@ const faultData = [
 ];
 
 const recentAlarms = [
-  { time: "6:48:50 AM", sensor: "S1", type: "Drift", color: "bg-blue-100 text-blue-800" },
-  { time: "6:47:50 AM", sensor: "S2", type: "Spike", color: "bg-blue-100 text-blue-800" },
-  { time: "6:46:50 AM", sensor: "S3", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
-  { time: "6:45:50 AM", sensor: "S1", type: "Drift", color: "bg-blue-100 text-blue-800" },
-  { time: "6:44:50 AM", sensor: "S2", type: "Spike", color: "bg-blue-100 text-blue-800" },
-  { time: "6:43:50 AM", sensor: "S3", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
-  { time: "6:42:50 AM", sensor: "S1", type: "Drift", color: "bg-blue-100 text-blue-800" },
-  { time: "6:41:50 AM", sensor: "S2", type: "Spike", color: "bg-blue-100 text-blue-800" },
+  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
+  { time: "6:47:50 AM", sensor: "Temp Sensor #4", type: "Spike", color: "bg-blue-100 text-blue-800" },
+  { time: "6:46:50 AM", sensor: "Pressure Gauge A", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
+  { time: "6:45:50 AM", sensor: "Vibration Sensor Y-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
+  { time: "6:44:50 AM", sensor: "Cooling Fan RPM", type: "Spike", color: "bg-blue-100 text-blue-800" },
+  { time: "6:43:50 AM", sensor: "Flow Rate Meter", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
+  { time: "6:42:50 AM", sensor: "Vibration Sensor Z-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
+  { time: "6:41:50 AM", sensor: "Temp Sensor #2", type: "Spike", color: "bg-blue-100 text-blue-800" },
 ];
 
 const processSteps = [
