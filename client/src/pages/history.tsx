@@ -16,19 +16,82 @@ const treeData = [
     type: "factory",
     children: [
       {
-        id: "proc-1",
+        id: "proc-1-1",
         name: "Etching Line A",
         type: "process",
         children: [
-          { id: "eq-1", name: "Robot Arm K-200", type: "equipment", hasAlert: true },
-          { id: "eq-2", name: "Conveyor Belt M-4", type: "equipment" },
+          { id: "eq-1-1", name: "Robot Arm K-200", type: "equipment", hasAlert: true },
+          { id: "eq-1-2", name: "Conveyor Belt M-4", type: "equipment" },
         ]
       },
       {
-        id: "proc-2",
+        id: "proc-1-2",
         name: "Assembly Line B",
         type: "process",
         children: []
+      }
+    ]
+  },
+  {
+    id: "fac-2",
+    name: "Factory Beta",
+    type: "factory",
+    children: [
+      {
+        id: "proc-2-1",
+        name: "Welding Unit C",
+        type: "process",
+        children: [
+          { id: "eq-2-1", name: "Spot Welder X-90", type: "equipment" },
+          { id: "eq-2-2", name: "Cooling System", type: "equipment" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "fac-3",
+    name: "Factory Gamma",
+    type: "factory",
+    children: [
+      {
+        id: "proc-3-1",
+        name: "Packaging Line D",
+        type: "process",
+        children: [
+          { id: "eq-3-1", name: "Packer Arm Z-10", type: "equipment" },
+          { id: "eq-3-2", name: "Label Printer P-5", type: "equipment", hasAlert: true },
+        ]
+      }
+    ]
+  },
+  {
+    id: "fac-4",
+    name: "Factory Delta",
+    type: "factory",
+    children: [
+      {
+        id: "proc-4-1",
+        name: "Quality Control E",
+        type: "process",
+        children: [
+          { id: "eq-4-1", name: "Vision Scanner V-8", type: "equipment" },
+        ]
+      }
+    ]
+  },
+  {
+    id: "fac-5",
+    name: "Factory Epsilon",
+    type: "factory",
+    children: [
+      {
+        id: "proc-5-1",
+        name: "Logistics Hub F",
+        type: "process",
+        children: [
+          { id: "eq-5-1", name: "AGV Unit 04", type: "equipment" },
+          { id: "eq-5-2", name: "AGV Unit 09", type: "equipment" },
+        ]
       }
     ]
   }

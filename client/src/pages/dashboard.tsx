@@ -3,6 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const kpiData = [
   { title: "Equipment Status", value: "98.2%", sub: "Operational", icon: Server, color: "text-emerald-500" },
@@ -24,6 +33,17 @@ const faultData = [
   { name: "Pressure Drop", count: 5 },
   { name: "Sensor Drift", count: 3 },
   { name: "Comm Error", count: 2 },
+];
+
+const recentAlarms = [
+  { time: "6:48:50 AM", sensor: "S1", type: "Drift", color: "bg-blue-100 text-blue-800" },
+  { time: "6:47:50 AM", sensor: "S2", type: "Spike", color: "bg-blue-100 text-blue-800" },
+  { time: "6:46:50 AM", sensor: "S3", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
+  { time: "6:45:50 AM", sensor: "S1", type: "Drift", color: "bg-blue-100 text-blue-800" },
+  { time: "6:44:50 AM", sensor: "S2", type: "Spike", color: "bg-blue-100 text-blue-800" },
+  { time: "6:43:50 AM", sensor: "S3", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
+  { time: "6:42:50 AM", sensor: "S1", type: "Drift", color: "bg-blue-100 text-blue-800" },
+  { time: "6:41:50 AM", sensor: "S2", type: "Spike", color: "bg-blue-100 text-blue-800" },
 ];
 
 const processSteps = [
@@ -179,6 +199,44 @@ export default function Dashboard() {
           </Card>
 
         </div>
+
+        {/* Recent Alarms Table */}
+        <Card className="shadow-sm border-border/60">
+          <CardHeader className="pb-4 border-b bg-muted/20 flex flex-row items-center justify-between">
+            <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Default Detection Alarms</CardTitle>
+            <div className="text-xs text-muted-foreground animate-pulse">
+              2s 간격 자동 갱신
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">Time</TableHead>
+                  <TableHead>Sensor</TableHead>
+                  <TableHead>Fault Type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentAlarms.map((alarm, i) => (
+                  <TableRow key={i} className="hover:bg-muted/50">
+                    <TableCell className="font-medium text-xs">{alarm.time}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
+                        {alarm.sensor}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
+                        {alarm.type}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
