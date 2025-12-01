@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, MoreHorizontal, FileDown, Eye } from "lucide-react";
+import { Plus, FileText, MoreHorizontal, FileDown, Eye, BarChart3, Activity } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -125,18 +125,77 @@ export default function ReportsPage() {
         </Card>
 
         {/* Mock Report Preview */}
-        <div className="mt-8 p-8 border rounded-lg bg-white shadow-sm max-w-4xl mx-auto min-h-[500px]">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-900">Weekly Fault Analysis</h1>
-            <p className="text-slate-500">Factory Alpha • Oct 24, 2023</p>
+        <div className="mt-8 border rounded-lg bg-white shadow-sm max-w-4xl mx-auto overflow-hidden">
+          {/* Report Actions Bar */}
+          <div className="bg-slate-50 border-b px-8 py-4 flex justify-between items-center">
+            <span className="text-sm font-medium text-slate-500">Previewing: R-2023-001</span>
+            <Button size="sm" className="gap-2" onClick={() => window.print()}>
+              <FileDown className="w-4 h-4" /> Export PDF / Print
+            </Button>
           </div>
-          <div className="space-y-6">
-            <div className="h-4 bg-slate-100 rounded w-3/4"></div>
-            <div className="h-4 bg-slate-100 rounded w-full"></div>
-            <div className="h-4 bg-slate-100 rounded w-5/6"></div>
-            <div className="grid grid-cols-2 gap-4 mt-8">
-               <div className="h-40 bg-slate-50 border border-slate-200 rounded flex items-center justify-center text-slate-400">Chart Placeholder</div>
-               <div className="h-40 bg-slate-50 border border-slate-200 rounded flex items-center justify-center text-slate-400">Chart Placeholder</div>
+
+          {/* Report Content */}
+          <div className="p-8 min-h-[500px]">
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-slate-900">Weekly Fault Analysis</h1>
+              <p className="text-slate-500">Factory Alpha • Oct 24, 2023</p>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Executive Summary */}
+              <div className="prose prose-slate max-w-none">
+                <h3 className="text-lg font-semibold text-slate-800 mb-2">Executive Summary</h3>
+                <p className="text-slate-600 leading-relaxed">
+                  This week's analysis indicates a stable production environment with a <strong>98.2%</strong> overall equipment efficiency (OEE). 
+                  However, a recurring vibration anomaly was detected in <strong>Robot Arm K-200</strong> during the shift changeovers. 
+                  Immediate maintenance is recommended to prevent potential downtime.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 mt-8">
+                 <div className="h-48 bg-slate-50 border border-slate-200 rounded flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <BarChart3 className="w-8 h-8 opacity-50" />
+                    <span className="text-xs font-medium">Fault Frequency by Hour</span>
+                 </div>
+                 <div className="h-48 bg-slate-50 border border-slate-200 rounded flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <Activity className="w-8 h-8 opacity-50" />
+                    <span className="text-xs font-medium">Vibration Trends (K-200)</span>
+                 </div>
+              </div>
+
+              {/* Detailed Findings */}
+              <div className="mt-8 pt-8 border-t">
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">Detailed Findings & Recommendations</h3>
+                <div className="space-y-4">
+                  <div className="flex gap-4">
+                     <div className="w-1.5 bg-amber-500 rounded-full h-auto min-h-[3rem]"></div>
+                     <div>
+                        <h4 className="font-medium text-slate-900">Vibration Spike Detected (Zone B)</h4>
+                        <p className="text-sm text-slate-600 mt-1">
+                           Sensors recorded a 15% increase in vibration amplitude on Conveyor Belt M-4. 
+                           This correlates with the new batch of heavier components introduced on Tuesday.
+                           <strong>Recommendation:</strong> Calibrate tension settings for M-4.
+                        </p>
+                     </div>
+                  </div>
+                  <div className="flex gap-4">
+                     <div className="w-1.5 bg-emerald-500 rounded-full h-auto min-h-[3rem]"></div>
+                     <div>
+                        <h4 className="font-medium text-slate-900">Process Efficiency Improvement</h4>
+                        <p className="text-sm text-slate-600 mt-1">
+                           Cycle times in the Packaging Line D have improved by 4% following the software update on Monday.
+                           Throughput has reached an all-time high for this quarter.
+                        </p>
+                     </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer */}
+              <div className="mt-12 pt-4 border-t border-slate-100 flex justify-between text-xs text-slate-400">
+                <span>Generated by SensorQubit FDC System</span>
+                <span>Page 1 of 1</span>
+              </div>
             </div>
           </div>
         </div>
