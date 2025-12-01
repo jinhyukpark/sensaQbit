@@ -157,16 +157,26 @@ export default function ModelsPage() {
                 
                 <div className="space-y-2">
                   <label className="text-xs font-medium uppercase text-muted-foreground">Time Range</label>
-                  <Select defaultValue="1h">
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Last 1 Hour" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1h">Last 1 Hour</SelectItem>
-                      <SelectItem value="6h">Last 6 Hours</SelectItem>
-                      <SelectItem value="24h">Last 24 Hours</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="grid gap-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-muted-foreground">Start Time</span>
+                        <input 
+                          type="datetime-local" 
+                          step="1"
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[10px] text-muted-foreground">End Time</span>
+                        <input 
+                          type="datetime-local" 
+                          step="1"
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <Button 
