@@ -8,18 +8,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { 
   Bot, User, Send, FileText, AlertTriangle, 
   Server, Cpu, Database, Activity, Radio, 
-  Zap, Router
+  Zap, Router, Move, ZoomIn, ZoomOut, RotateCcw
 } from "lucide-react";
 
 // Generate ~100 nodes in a centered radial network layout
 const generateNodes = () => {
   const nodes = [];
-  const centerX = 600; // Center of the visualization area
-  const centerY = 400;
+  const centerX = 0; // Use 0,0 as center for easier panning
+  const centerY = 0;
 
   // Level 0: Main Hub (Center)
   nodes.push({ 
@@ -124,14 +124,22 @@ const generateLinks = (nodes: any[]) => {
   return links;
 };
 
-const nodes = generateNodes();
-const links = generateLinks(nodes);
+const initialNodes = generateNodes();
+const initialLinks = generateLinks(initialNodes);
 
 export default function NetworkPage() {
+  const [nodes, setNodes] = useState(initialNodes);
   const [threshold, setThreshold] = useState([50]);
   const [note, setNote] = useState("");
   const [selectedNode, setSelectedNode] = useState<any>(nodes[0]);
   const [showFaultsOnly, setShowFaultsOnly] = useState(false);
+  
+  // Viewport State
+  const [view, setView] = useState({ x: 600, y: 400, scale: 0.75 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragMode, setDragMode] = useState<'pan' | 'node' | null>(null);
+  const [draggedNodeId, setDraggedNodeId] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Calculate statistics
   const stats = {
@@ -147,224 +155,329 @@ export default function NetworkPage() {
     }
   };
 
-  // Calculate dynamic node positions
-  const getDisplayNodes = () => {
+  // Handle Fault Toggle
+  const handleFaultClick = () => {
+    setShowFaultsOnly(true);
+  };
+
+  // Animate nodes into circular layout when fault mode is enabled
+  useEffect(() => {
     if (showFaultsOnly) {
-      // Filter for warning nodes
       const faultNodes = nodes.filter(n => n.status === 'warning');
-      const centerX = 600;
-      const centerY = 400;
       const radius = 200;
 
-      return nodes.map(node => {
-        // If not a fault node, hide it or keep original position but invisible
-        if (node.status !== 'warning') {
-          return { ...node, visible: false };
-        }
+      setNodes(prevNodes => prevNodes.map(node => {
+        if (node.status !== 'warning') return node;
         
-        // If it is a fault node, calculate new circular position
         const index = faultNodes.findIndex(n => n.id === node.id);
-        const angle = (index / faultNodes.length) * 2 * Math.PI - (Math.PI / 2); // Start from top
+        const angle = (index / faultNodes.length) * 2 * Math.PI - (Math.PI / 2);
         
         return {
           ...node,
-          visible: true,
-          // Override position for the circular layout
-          x: centerX + radius * Math.cos(angle),
-          y: centerY + radius * Math.sin(angle)
+          targetX: radius * Math.cos(angle),
+          targetY: radius * Math.sin(angle)
         };
-      });
+      }));
+    } else {
+      // Reset to original generated positions (approximate)
+      // In a real app we'd store original positions. 
+      // For now, we just clear targetX/Y and let them drift back if we had physics,
+      // but here we'll just regenerate or keep them as is.
+      // Actually, let's just clear target properties so they use x/y
+      setNodes(prevNodes => prevNodes.map(node => {
+        const { targetX, targetY, ...rest } = node as any;
+        return rest;
+      }));
     }
-    
-    // Default mode: Show all nodes in original positions
-    return nodes.map(node => ({ ...node, visible: true }));
+  }, [showFaultsOnly]);
+
+  // Interaction Handlers
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const scaleSensitivity = 0.001;
+    const newScale = Math.min(Math.max(0.2, view.scale - e.deltaY * scaleSensitivity), 4);
+    setView(v => ({ ...v, scale: newScale }));
   };
 
-  const displayNodes = getDisplayNodes();
+  const handlePointerDown = (e: React.PointerEvent, nodeId?: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    (e.target as Element).setPointerCapture(e.pointerId);
+    
+    if (nodeId !== undefined) {
+      setDragMode('node');
+      setDraggedNodeId(nodeId);
+      // Select node on click start
+      const node = nodes.find(n => n.id === nodeId);
+      if (node) setSelectedNode(node);
+    } else {
+      setDragMode('pan');
+    }
+    setIsDragging(true);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+
+    if (dragMode === 'pan') {
+      setView(v => ({
+        ...v,
+        x: v.x + e.movementX,
+        y: v.y + e.movementY
+      }));
+    } else if (dragMode === 'node' && draggedNodeId !== null) {
+      const scale = view.scale;
+      setNodes(prev => prev.map(n => {
+        if (n.id === draggedNodeId) {
+          return {
+            ...n,
+            x: n.x + e.movementX / scale,
+            y: n.y + e.movementY / scale
+          };
+        }
+        return n;
+      }));
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    e.preventDefault();
+    (e.target as Element).releasePointerCapture(e.pointerId);
+    setIsDragging(false);
+    setDragMode(null);
+    setDraggedNodeId(null);
+  };
+
+  const resetView = () => {
+    setView({ x: 600, y: 400, scale: 0.75 });
+  };
 
   return (
     <AppLayout title="Network Graph">
       <div className="relative h-full w-full overflow-hidden bg-slate-50 flex">
         
         {/* Left Area: Visualization */}
-        <div className="flex-1 relative h-full overflow-hidden cursor-grab active:cursor-grabbing">
+        <div 
+          className="flex-1 relative h-full overflow-hidden cursor-grab active:cursor-grabbing bg-slate-50/50"
+          onWheel={handleWheel}
+          onPointerDown={(e) => handlePointerDown(e)}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          ref={containerRef}
+        >
           {/* Controls Overlay */}
-          <div className="absolute top-4 left-4 z-10 w-64 space-y-4">
-            {/* Network Status Card */}
-            <Card className="p-4 shadow-lg bg-background/90 backdrop-blur">
-              <h3 className="font-medium mb-3 flex items-center gap-2">
-                <Activity className="w-4 h-4 text-primary" /> Network Status
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted-foreground">Total Nodes</span>
-                  <span className="font-bold">{stats.total}</span>
+          <div className="absolute top-4 left-4 z-10 w-64 space-y-4 pointer-events-none">
+            <div className="pointer-events-auto space-y-4">
+              {/* Network Status Card */}
+              <Card className="p-4 shadow-lg bg-background/90 backdrop-blur">
+                <h3 className="font-medium mb-3 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-primary" /> Network Status
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground">Total Nodes</span>
+                    <span className="font-bold">{stats.total}</span>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                        Controllers
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {stats.faults.controllers > 0 && (
+                          <span 
+                            className="text-amber-500 font-bold cursor-pointer hover:underline"
+                            onClick={handleFaultClick}
+                          >
+                            {stats.faults.controllers} err
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">{stats.controllers}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-slate-500"></div>
+                        Equipment
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {stats.faults.equipment > 0 && (
+                          <span 
+                            className="text-amber-500 font-bold cursor-pointer hover:underline"
+                            onClick={handleFaultClick}
+                          >
+                            {stats.faults.equipment} err
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">{stats.equipment}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        Sensors
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {stats.faults.sensors > 0 && (
+                          <span 
+                            className="text-amber-500 font-bold cursor-pointer hover:underline"
+                            onClick={handleFaultClick}
+                          >
+                            {stats.faults.sensors} err
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">{stats.sensors}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                      Controllers
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {stats.faults.controllers > 0 && (
-                        <span 
-                          className="text-amber-500 font-bold cursor-pointer hover:underline"
-                          onClick={handleFaultClick}
-                        >
-                          {stats.faults.controllers} err
-                        </span>
-                      )}
-                      <span className="text-muted-foreground">{stats.controllers}</span>
-                    </div>
+                {stats.faults.total > 0 && (
+                  <div 
+                    className="mt-4 pt-3 border-t flex items-center gap-2 text-xs text-amber-600 font-medium cursor-pointer hover:bg-amber-50 p-1 rounded transition-colors"
+                    onClick={handleFaultClick}
+                  >
+                    <AlertTriangle className="w-3 h-3" />
+                    {stats.faults.total} nodes require attention
+                  </div>
+                )}
+              </Card>
+
+              <Card className="p-4 shadow-lg bg-background/90 backdrop-blur">
+                <h3 className="font-medium mb-4">Graph Filters</h3>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium">Correlation Threshold</label>
+                    <Slider defaultValue={[50]} max={100} step={1} onValueChange={setThreshold} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium">Show Faults Only</label>
+                    <Switch 
+                      checked={showFaultsOnly}
+                      onCheckedChange={setShowFaultsOnly}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium">Show Data Flow</label>
+                    <Switch defaultChecked />
                   </div>
                 </div>
+              </Card>
+            </div>
+          </div>
 
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-slate-500"></div>
-                      Equipment
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {stats.faults.equipment > 0 && (
-                        <span 
-                          className="text-amber-500 font-bold cursor-pointer hover:underline"
-                          onClick={handleFaultClick}
-                        >
-                          {stats.faults.equipment} err
-                        </span>
-                      )}
-                      <span className="text-muted-foreground">{stats.equipment}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                      Sensors
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {stats.faults.sensors > 0 && (
-                        <span 
-                          className="text-amber-500 font-bold cursor-pointer hover:underline"
-                          onClick={handleFaultClick}
-                        >
-                          {stats.faults.sensors} err
-                        </span>
-                      )}
-                      <span className="text-muted-foreground">{stats.sensors}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {stats.faults.total > 0 && (
-                 <div 
-                   className="mt-4 pt-3 border-t flex items-center gap-2 text-xs text-amber-600 font-medium cursor-pointer hover:bg-amber-50 p-1 rounded transition-colors"
-                   onClick={handleFaultClick}
-                 >
-                   <AlertTriangle className="w-3 h-3" />
-                   {stats.faults.total} nodes require attention
-                 </div>
-              )}
-            </Card>
-
-            <Card className="p-4 shadow-lg bg-background/90 backdrop-blur">
-              <h3 className="font-medium mb-4">Graph Filters</h3>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium">Correlation Threshold</label>
-                  <Slider defaultValue={[50]} max={100} step={1} onValueChange={setThreshold} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium">Show Faults Only</label>
-                  <Switch 
-                    checked={showFaultsOnly}
-                    onCheckedChange={setShowFaultsOnly}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium">Show Data Flow</label>
-                  <Switch defaultChecked />
-                </div>
-              </div>
+          {/* View Controls */}
+          <div className="absolute bottom-4 left-4 z-10 pointer-events-auto">
+            <Card className="p-2 shadow-lg bg-background/90 backdrop-blur flex gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView(v => ({ ...v, scale: v.scale * 1.2 }))}>
+                <ZoomIn className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setView(v => ({ ...v, scale: v.scale / 1.2 }))}>
+                <ZoomOut className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={resetView}>
+                <RotateCcw className="w-4 h-4" />
+              </Button>
             </Card>
           </div>
 
           {/* Graph Visualization Area */}
-          <div className="w-full h-full relative overflow-hidden flex items-center justify-center">
-            {/* Using a large fixed size SVG centered via flexbox, but using generated coordinates */}
-            <div className="relative w-[1200px] h-[800px] scale-75 origin-center">
-              <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                {links.map((link, i) => {
-                  // Find nodes in displayNodes array which has updated positions
-                  const start = displayNodes.find(n => n.id === link.from)!;
-                  const end = displayNodes.find(n => n.id === link.to)!;
+          <div 
+            className="w-full h-full relative overflow-visible"
+            style={{
+              transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`,
+              transformOrigin: "0 0"
+            }}
+          >
+            {/* Links Layer */}
+            <svg className="absolute inset-0 overflow-visible pointer-events-none" style={{ left: -5000, top: -5000, width: 10000, height: 10000 }}>
+              <g transform="translate(5000, 5000)">
+                {initialLinks.map((link, i) => {
+                  const start = nodes.find(n => n.id === link.from)!;
+                  const end = nodes.find(n => n.id === link.to)!;
                   
-                  // Check visibility
-                  if (!start.visible || !end.visible) return null;
+                  const isStartVisible = !showFaultsOnly || start.status === 'warning';
+                  const isEndVisible = !showFaultsOnly || end.status === 'warning';
+                  
+                  if (!isStartVisible || !isEndVisible) return null;
+
+                  const sx = (start as any).targetX ?? start.x;
+                  const sy = (start as any).targetY ?? start.y;
+                  const ex = (end as any).targetX ?? end.x;
+                  const ey = (end as any).targetY ?? end.y;
 
                   return (
                     <motion.line
                       key={i}
-                      initial={false}
-                      animate={{
-                        x1: start.x,
-                        y1: start.y,
-                        x2: end.x,
-                        y2: end.y
-                      }}
+                      animate={{ x1: sx, y1: sy, x2: ex, y2: ey }}
                       transition={{ duration: 0.5, ease: "easeInOut" }}
                       stroke={link.dashed ? "#94a3b8" : "#cbd5e1"}
-                      strokeWidth={link.dashed ? 1 : 2}
+                      strokeWidth={(link.dashed ? 1 : 2) / Math.max(0.5, view.scale * 0.5)} // Keep thin on zoom
                       strokeDasharray={link.dashed ? "4,4" : "0"}
                       opacity={0.6}
                     />
                   );
                 })}
-              </svg>
+              </g>
+            </svg>
+            
+            {/* Nodes Layer */}
+            {nodes.map((node) => {
+              const Icon = node.icon;
+              const isSelected = selectedNode?.id === node.id;
+              const isFaultMode = showFaultsOnly && node.status !== 'warning';
               
-              {displayNodes.map((node) => {
-                const Icon = node.icon;
-                const isSelected = selectedNode?.id === node.id;
-                
-                if (!node.visible) return null;
+              if (isFaultMode) return null;
 
-                return (
-                  <motion.div
-                    key={node.id}
-                    className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all ${node.color} text-white ${isSelected ? 'ring-4 ring-white ring-offset-2 ring-offset-primary' : 'hover:ring-4 hover:ring-primary/20'}`}
-                    initial={false}
-                    animate={{
-                      left: node.x - node.size / 2,
-                      top: node.y - node.size / 2,
-                    }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                    style={{
-                      width: node.size,
-                      height: node.size,
-                      zIndex: node.type === 'hub' ? 30 : node.type === 'controller' ? 20 : 10
-                    }}
-                    whileHover={{ scale: 1.2, zIndex: 50 }}
-                    onClick={() => setSelectedNode(node)}
-                    drag
-                    dragConstraints={{ left: 0, right: 1200, top: 0, bottom: 800 }}
-                  >
-                    <Icon className={`${node.size > 30 ? "w-6 h-6" : "w-3 h-3"}`} />
-                    
-                    {node.size > 30 && (
-                      <div className="absolute -bottom-6 text-[10px] font-bold whitespace-nowrap bg-white/90 text-slate-700 px-2 py-0.5 rounded shadow-sm border backdrop-blur-sm">
-                        {node.label}
-                      </div>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
+              const tx = (node as any).targetX ?? node.x;
+              const ty = (node as any).targetY ?? node.y;
+
+              return (
+                <motion.div
+                  key={node.id}
+                  className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-colors ${node.color} text-white ${isSelected ? 'ring-4 ring-white ring-offset-2 ring-offset-primary' : 'hover:ring-4 hover:ring-primary/20'}`}
+                  animate={{
+                    left: tx,
+                    top: ty,
+                    marginLeft: -node.size / 2,
+                    marginTop: -node.size / 2
+                  }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                  style={{
+                    width: node.size,
+                    height: node.size,
+                    zIndex: node.type === 'hub' ? 30 : node.type === 'controller' ? 20 : 10,
+                    touchAction: 'none' // Important for pointer events
+                  }}
+                  onPointerDown={(e) => handlePointerDown(e, node.id)}
+                  whileHover={{ scale: 1.1, zIndex: 50 }}
+                >
+                  <Icon 
+                    className="pointer-events-none" 
+                    style={{ 
+                      width: node.size > 30 ? 24 : 12, 
+                      height: node.size > 30 ? 24 : 12 
+                    }} 
+                  />
+                  
+                  {node.size > 30 && (
+                    <div className="absolute -bottom-6 text-[10px] font-bold whitespace-nowrap bg-white/90 text-slate-700 px-2 py-0.5 rounded shadow-sm border backdrop-blur-sm pointer-events-none">
+                      {node.label}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 
