@@ -13,7 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useFilter } from "@/lib/filter-context";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 // Original Data Sets
 const kpiDataAll = [
@@ -60,21 +61,32 @@ const faultDataFiltered = [
   { name: "Comm Error", count: 0 },
 ];
 
-const recentAlarmsAll = [
-  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
-  { time: "6:47:50 AM", sensor: "Temp Sensor #4", type: "Spike", color: "bg-blue-100 text-blue-800" },
-  { time: "6:46:50 AM", sensor: "Pressure Gauge A", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
-  { time: "6:45:50 AM", sensor: "Vibration Sensor Y-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
-  { time: "6:44:50 AM", sensor: "Cooling Fan RPM", type: "Spike", color: "bg-blue-100 text-blue-800" },
-  { time: "6:43:50 AM", sensor: "Flow Rate Meter", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
-  { time: "6:42:50 AM", sensor: "Vibration Sensor Z-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
-  { time: "6:41:50 AM", sensor: "Temp Sensor #2", type: "Spike", color: "bg-blue-100 text-blue-800" },
+// Updated Alarms with Categories
+interface Alarm {
+  time: string;
+  sensor: string;
+  type: string;
+  category: 'data' | 'physical' | 'cause';
+  color: string;
+}
+
+const recentAlarmsAll: Alarm[] = [
+  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800" },
+  { time: "6:47:50 AM", sensor: "Temp Sensor #4", type: "Spike", category: 'data', color: "bg-blue-100 text-blue-800" },
+  { time: "6:46:50 AM", sensor: "Pressure Gauge A", type: "LowSignal", category: 'data', color: "bg-blue-100 text-blue-800" },
+  { time: "6:45:50 AM", sensor: "Vibration Sensor Y-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800" },
+  { time: "6:44:50 AM", sensor: "Cooling Fan RPM", type: "Equipment Failure", category: 'cause', color: "bg-red-100 text-red-800" },
+  { time: "6:43:50 AM", sensor: "Flow Rate Meter", type: "Dimensional Fault", category: 'physical', color: "bg-amber-100 text-amber-800" },
+  { time: "6:42:50 AM", sensor: "Vibration Sensor Z-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800" },
+  { time: "6:41:50 AM", sensor: "Temp Sensor #2", type: "Spike", category: 'data', color: "bg-blue-100 text-blue-800" },
+  { time: "6:40:50 AM", sensor: "Surface Scanner", type: "Scratch Detected", category: 'physical', color: "bg-amber-100 text-amber-800" },
+  { time: "6:39:50 AM", sensor: "Gas Flow Controller", type: "Process Recipe Error", category: 'cause', color: "bg-red-100 text-red-800" },
 ];
 
-const recentAlarmsFiltered = [
-  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical", color: "bg-red-100 text-red-800" },
-  { time: "6:45:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical", color: "bg-red-100 text-red-800" },
-  { time: "6:42:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical", color: "bg-red-100 text-red-800" },
+const recentAlarmsFiltered: Alarm[] = [
+  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical Spike", category: 'data', color: "bg-red-100 text-red-800" },
+  { time: "6:45:50 AM", sensor: "Vibration Sensor X-Axis", type: "Equipment Malfunction", category: 'cause', color: "bg-red-100 text-red-800" },
+  { time: "6:42:50 AM", sensor: "Vibration Sensor X-Axis", type: "Surface Crack", category: 'physical', color: "bg-amber-100 text-amber-800" },
 ];
 
 const processSteps = [
@@ -87,6 +99,7 @@ const processSteps = [
 
 export default function Dashboard() {
   const { factory, process, equipment } = useFilter();
+  const [activeFilter, setActiveFilter] = useState<string>("all");
   
   // Simple logic to switch data based on filters
   const isFiltered = factory !== "all" || process !== "all" || equipment !== "all";
@@ -94,7 +107,12 @@ export default function Dashboard() {
   const kpiData = isFiltered ? kpiDataFiltered : kpiDataAll;
   const sensorData = isFiltered ? sensorDataFiltered : sensorDataAll;
   const faultData = isFiltered ? faultDataFiltered : faultDataAll;
-  const recentAlarms = isFiltered ? recentAlarmsFiltered : recentAlarmsAll;
+  const recentAlarmsRaw = isFiltered ? recentAlarmsFiltered : recentAlarmsAll;
+
+  const recentAlarms = useMemo(() => {
+    if (activeFilter === "all") return recentAlarmsRaw;
+    return recentAlarmsRaw.filter(alarm => alarm.category === activeFilter);
+  }, [recentAlarmsRaw, activeFilter]);
 
   const filteredTitle = useMemo(() => {
     if (!isFiltered) return "Overview (All Factories)";
@@ -252,10 +270,35 @@ export default function Dashboard() {
 
         {/* Recent Alarms Table */}
         <Card className="shadow-sm border-border/60">
-          <CardHeader className="pb-4 border-b bg-muted/20 flex flex-row items-center justify-between">
-            <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Default Detection Alarms</CardTitle>
-            <div className="text-xs text-muted-foreground animate-pulse">
-              2s 간격 자동 갱신
+          <CardHeader className="pb-4 border-b bg-muted/20 flex flex-col gap-4">
+            <div className="flex flex-row items-center justify-between w-full">
+              <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Default Detection Alarms</CardTitle>
+              <div className="text-xs text-muted-foreground animate-pulse">
+                2s 간격 자동 갱신
+              </div>
+            </div>
+            
+            {/* Filter Toggles */}
+            <div className="w-full flex justify-start">
+              <ToggleGroup 
+                type="single" 
+                value={activeFilter} 
+                onValueChange={(val) => val && setActiveFilter(val)}
+                className="justify-start"
+              >
+                <ToggleGroupItem value="all" size="sm" className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
+                  All Parameters
+                </ToggleGroupItem>
+                <ToggleGroupItem value="data" size="sm" className="text-xs px-3 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-800 data-[state=on]:border-blue-200">
+                  Data Patterns
+                </ToggleGroupItem>
+                <ToggleGroupItem value="physical" size="sm" className="text-xs px-3 data-[state=on]:bg-amber-100 data-[state=on]:text-amber-800 data-[state=on]:border-amber-200">
+                  Physical Faults
+                </ToggleGroupItem>
+                <ToggleGroupItem value="cause" size="sm" className="text-xs px-3 data-[state=on]:bg-red-100 data-[state=on]:text-red-800 data-[state=on]:border-red-200">
+                  Root Cause
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -265,24 +308,36 @@ export default function Dashboard() {
                   <TableHead className="w-[200px]">Time</TableHead>
                   <TableHead>Sensor</TableHead>
                   <TableHead>Fault Type</TableHead>
+                  <TableHead className="text-right">Category</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentAlarms.map((alarm, i) => (
-                  <TableRow key={i} className="hover:bg-muted/50">
-                    <TableCell className="font-medium text-xs">{alarm.time}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
-                        {alarm.sensor}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
-                        {alarm.type}
-                      </Badge>
+                {recentAlarms.length > 0 ? (
+                  recentAlarms.map((alarm, i) => (
+                    <TableRow key={i} className="hover:bg-muted/50">
+                      <TableCell className="font-medium text-xs">{alarm.time}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
+                          {alarm.sensor}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
+                          {alarm.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right text-xs text-muted-foreground capitalize">
+                        {alarm.category}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground text-sm">
+                      No alarms found for this category.
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
             </Table>
           </CardContent>
