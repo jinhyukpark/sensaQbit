@@ -147,9 +147,40 @@ export default function NetworkPage() {
     }
   };
 
-  const handleFaultClick = () => {
-    setShowFaultsOnly(true);
+  // Calculate dynamic node positions
+  const getDisplayNodes = () => {
+    if (showFaultsOnly) {
+      // Filter for warning nodes
+      const faultNodes = nodes.filter(n => n.status === 'warning');
+      const centerX = 600;
+      const centerY = 400;
+      const radius = 200;
+
+      return nodes.map(node => {
+        // If not a fault node, hide it or keep original position but invisible
+        if (node.status !== 'warning') {
+          return { ...node, visible: false };
+        }
+        
+        // If it is a fault node, calculate new circular position
+        const index = faultNodes.findIndex(n => n.id === node.id);
+        const angle = (index / faultNodes.length) * 2 * Math.PI - (Math.PI / 2); // Start from top
+        
+        return {
+          ...node,
+          visible: true,
+          // Override position for the circular layout
+          x: centerX + radius * Math.cos(angle),
+          y: centerY + radius * Math.sin(angle)
+        };
+      });
+    }
+    
+    // Default mode: Show all nodes in original positions
+    return nodes.map(node => ({ ...node, visible: true }));
   };
+
+  const displayNodes = getDisplayNodes();
 
   return (
     <AppLayout title="Network Graph">
@@ -270,22 +301,24 @@ export default function NetworkPage() {
             <div className="relative w-[1200px] h-[800px] scale-75 origin-center">
               <svg className="absolute inset-0 w-full h-full pointer-events-none">
                 {links.map((link, i) => {
-                  const start = nodes.find(n => n.id === link.from)!;
-                  const end = nodes.find(n => n.id === link.to)!;
+                  // Find nodes in displayNodes array which has updated positions
+                  const start = displayNodes.find(n => n.id === link.from)!;
+                  const end = displayNodes.find(n => n.id === link.to)!;
                   
-                  // Filter links based on node visibility
-                  const isStartVisible = !showFaultsOnly || start.status === 'warning';
-                  const isEndVisible = !showFaultsOnly || end.status === 'warning';
-                  
-                  if (!isStartVisible || !isEndVisible) return null;
+                  // Check visibility
+                  if (!start.visible || !end.visible) return null;
 
                   return (
-                    <line
+                    <motion.line
                       key={i}
-                      x1={start.x}
-                      y1={start.y}
-                      x2={end.x}
-                      y2={end.y}
+                      initial={false}
+                      animate={{
+                        x1: start.x,
+                        y1: start.y,
+                        x2: end.x,
+                        y2: end.y
+                      }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
                       stroke={link.dashed ? "#94a3b8" : "#cbd5e1"}
                       strokeWidth={link.dashed ? 1 : 2}
                       strokeDasharray={link.dashed ? "4,4" : "0"}
@@ -295,28 +328,28 @@ export default function NetworkPage() {
                 })}
               </svg>
               
-              {nodes.map((node) => {
+              {displayNodes.map((node) => {
                 const Icon = node.icon;
                 const isSelected = selectedNode?.id === node.id;
                 
-                // Filter nodes
-                if (showFaultsOnly && node.status !== 'warning') return null;
+                if (!node.visible) return null;
 
                 return (
                   <motion.div
                     key={node.id}
                     className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all ${node.color} text-white ${isSelected ? 'ring-4 ring-white ring-offset-2 ring-offset-primary' : 'hover:ring-4 hover:ring-primary/20'}`}
+                    initial={false}
+                    animate={{
+                      left: node.x - node.size / 2,
+                      top: node.y - node.size / 2,
+                    }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
                     style={{
                       width: node.size,
                       height: node.size,
-                      left: node.x - node.size / 2,
-                      top: node.y - node.size / 2,
                       zIndex: node.type === 'hub' ? 30 : node.type === 'controller' ? 20 : 10
                     }}
                     whileHover={{ scale: 1.2, zIndex: 50 }}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: node.id * 0.01 }}
                     onClick={() => setSelectedNode(node)}
                     drag
                     dragConstraints={{ left: 0, right: 1200, top: 0, bottom: 800 }}
