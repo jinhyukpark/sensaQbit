@@ -1,0 +1,214 @@
+react + spring + Postgress 
+⸻
+
+✅ 레플렛 전용 UI 디자인 프롬프트 (SensorQubit – FDC Module)
+
+아래 내용을 그대로 복사해서 레플렛에 입력하세요.
+
+⸻
+
+Design a full-featured web UI for the FDC (Fault Detection & Classification) module inside the SensorQubit manufacturing AI platform.
+
+SensorQubit is an industrial AI solution that analyzes real-time sensing data from manufacturing sites.
+The FDC module is responsible for detecting equipment faults, classifying anomalies, analyzing time-series sensor behaviors, reviewing historical faults, testing AI models, generating reports, and visualizing sensor networks.
+
+⸻
+
+🎨 Overall Design Requirements
+	•	Modern enterprise-grade industrial analytics UI
+	•	Clean, minimal, data-heavy dashboard similar to Datadog, AWS Console, or Siemens Industrial Edge
+	•	Left side vertical navigation menu for FDC sub-modules
+	•	Responsive layout for desktop first
+	•	Use cards, charts, timelines, tables, and node-graphs
+
+⸻
+
+📌 Left Sidebar Navigation (for FDC module)
+	1.	Dashboard
+	2.	History
+	3.	Models
+	4.	Reports
+	5.	Network
+	6.	Settings
+
+Each page should have a consistent header showing:
+	•	Current module name: “FDC — Fault Detection & Classification”
+	•	Date range selector
+	•	Factory / Process / Equipment selectors (dropdowns)
+
+⸻
+
+🟦 1. Dashboard Page UI
+
+Create a dashboard that shows the health of current manufacturing processes.
+
+Top Section (KPI Cards)
+
+4–6 metric cards showing:
+	•	Current Equipment Status (OK / Warning / Fault Count)
+	•	Quality Normal Rate (%)
+	•	Active Fault Alerts
+	•	Average Fault Detection Time
+	•	Number of Active Sensors
+	•	Production Line Status
+
+Middle Section
+
+Process Overview Panel
+	•	Shows the currently selected factory, process line, and major equipment
+	•	Uses a horizontal process-flow visualization
+
+Bottom Section
+
+Charts
+	•	Real-time sensor signal chart
+	•	Fault detection waveform overlays
+	•	Recent anomaly distribution
+	•	Bar chart: fault type frequency
+
+⸻
+
+🟦 2. History Page UI (Tree Structure + Time-Series Analytics)
+
+Left Panel
+
+A hierarchical tree:
+	•	Factory
+▸ Process
+▸ Equipment
+▸ Sensor List
+
+Users can expand/collapse nodes.
+
+Right Panel
+
+When a sensor/equipment is selected, show:
+
+A. Summary Cards
+	•	Total faults in selected period
+	•	Fault types & counts
+	•	Equipment uptime (%)
+
+B. Time-Series Charts
+	•	Multi-line sensor signals
+	•	Anomaly points highlighted
+	•	Zoom-in/zoom-out interactions
+
+C. Filters & Date Range Selector
+User can select:
+	•	Factory
+	•	Process
+	•	Sensor
+	•	Custom date range
+
+⸻
+
+🟦 3. Models Page (Model Testing Playground)
+
+This page allows engineers to test AI models using historical sensor data.
+
+Components:
+	1.	Model List (grid or table)
+Each item shows model name, version, precision, recall, last updated.
+	2.	Test Panel
+	•	Dropdown: Select sensor or equipment
+	•	Date range selector
+	•	Button: “Run Model Test”
+	3.	Result View
+After running the model:
+	•	Fault prediction timeline
+	•	Confusion matrix
+	•	Precision / Recall / F1 Score cards
+	•	Downloadable result
+
+⸻
+
+🟦 4. Reports Page
+
+Users generate snapshot-based analysis reports.
+
+Sections:
+	1.	Report List
+	•	Title
+	•	Created date
+	•	Created by
+	•	Status (e.g., completed, draft)
+	•	Buttons: View / Download / Delete
+	2.	Create New Report Button
+Opens a modal:
+	•	Select factory, process, equipment
+	•	Select date range
+	•	Select included charts (checklist)
+	•	Generate Report
+	3.	Report Viewer
+	•	PDF-style page with charts, statistics, and explanations
+
+⸻
+
+🟦 5. Network Page (Graph Relationship Analytics)
+
+This is a graph-based visualization of sensor relationships.
+
+Design Requirements:
+
+Show an interactive node-link diagram where:
+	•	Each sensor is a node
+	•	Connections represent correlation, influence, or signal similarity
+	•	Node size = sensor importance
+	•	Node color = fault probability or health score
+
+Additional Panels:
+	•	Left: Filters
+	•	Factory / Process
+	•	Correlation threshold slider
+	•	Highlight: fault sensors only
+	•	Right: Sensor Detail Inspector
+	•	Selected node summary
+	•	Relationships
+	•	Recent anomalies
+	•	Mini time-series preview
+
+This page feels similar to:
+	•	Neo4j Bloom
+	•	Graphistry
+	•	Gephi
+
+⸻
+
+🟦 6. Settings Page (Parameters + Team Management)
+
+A. Parameter Configuration
+
+Dynamic parameters for FDC:
+	•	Fault thresholds
+	•	Signal smoothing parameters
+	•	Model selection defaults
+	•	Alerting rules
+	•	Notification settings
+
+Use editable form fields, sliders, dropdowns.
+
+B. Team Management
+	•	Invite new users via email
+	•	Assign roles: Admin / Editor / Viewer
+	•	Permission matrix
+	•	List of current members with status
+
+⸻
+
+🛠 Additional UI Notes
+	•	Provide responsive layout
+	•	Use clear typography
+	•	Heavy use of charts and data visualizations
+	•	Industrial-grade color palette (blue / grey / white)
+	•	Keep consistency across all modules
+
+⸻
+
+✅ Deliverables Expected from Reflet
+	•	Full-page UI design for each sub-module of the FDC platform
+	•	High-fidelity wireframe or final UI mockups
+	•	Clear navigation flow
+	•	Consistent layout system
+
+⸻
