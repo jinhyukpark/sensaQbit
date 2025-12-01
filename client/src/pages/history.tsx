@@ -126,13 +126,40 @@ const mockSensors: Record<string, { id: string; name: string; code: string }[]> 
 
 // Mock Data for Table
 const generateTableData = (count: number) => {
-  return Array.from({ length: count }, (_, i) => ({
-    productId: `PROD-${20240000 + i}`,
-    location: `EQP-2005-S${Math.floor(Math.random() * 50).toString().padStart(2, '0')}`,
-    section: Math.random() > 0.5 ? "Zone A - Heater" : "Zone B - Cooler",
-    isDefective: Math.random() > 0.9, // 10% defect rate
-    date: new Date(Date.now() - i * 10000).toLocaleString(),
-  }));
+  const zones = [
+    "Zone A - Pre-Heat", 
+    "Zone B - Main Chamber", 
+    "Zone C - Cooling", 
+    "Zone D - Exhaust", 
+    "Zone E - Input Buffer"
+  ];
+  const locations = [
+    "EQP-2005-S03 (Vibration)", 
+    "EQP-2005-S15 (Temp)", 
+    "EQP-2005-P01 (Pressure)", 
+    "EQP-2005-F02 (Flow)", 
+    "EQP-2005-W05 (Power)"
+  ];
+
+  return Array.from({ length: count }, (_, i) => {
+    const isDefective = Math.random() > 0.85; // 15% defect rate
+    let status = "Normal";
+    if (isDefective) {
+      const defects = ["Spike Detected", "Drift Warning", "Low Signal", "Out of Spec", "Communication Error"];
+      status = defects[Math.floor(Math.random() * defects.length)];
+    }
+
+    return {
+      productId: `LOT-${new Date().getFullYear()}${(Math.floor(Math.random() * 10000)).toString().padStart(4, '0')}-${(i + 1).toString().padStart(3, '0')}`,
+      location: locations[Math.floor(Math.random() * locations.length)],
+      section: zones[Math.floor(Math.random() * zones.length)],
+      isDefective: isDefective,
+      statusText: status,
+      date: new Date(Date.now() - i * 45000).toLocaleString('en-US', { 
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
+      }),
+    };
+  });
 };
 
 const initialTableData = generateTableData(20);
@@ -140,7 +167,8 @@ const initialTableData = generateTableData(20);
 export default function HistoryPage() {
   const [selectedNode, setSelectedNode] = useState<string | null>("eq-1");
   const [activeCategory, setActiveCategory] = useState<string>("temp");
-  const [selectedSensors, setSelectedSensors] = useState<string[]>([]);
+  // Default select some sensors to show data immediately
+  const [selectedSensors, setSelectedSensors] = useState<string[]>(["temp-0", "temp-1"]);
   
   // Filter logic
   const currentSensors = mockSensors[activeCategory] || [];
@@ -162,8 +190,16 @@ export default function HistoryPage() {
   // Filtered table data (mock)
   const tableData = useMemo(() => {
     // In a real app, this would filter based on selectedSensors
-    // For mockup, we just return the static list or regenerate if empty
+    // For mockup, we show data regardless or regenerate based on selection count
+    // But user asked for "dummy data in each list" so let's always show robust data
+    // if (selectedSensors.length === 0) return []; // REMOVED to show data by default or based on initial selection
+    
+    // If nothing selected, maybe show nothing? Or show all? 
+    // User said "put dummy data in each list". 
+    // Let's stick to "show data if selected", but we pre-selected some sensors above.
     if (selectedSensors.length === 0) return [];
+    
+    // Return slightly different data to simulate filtering if needed, but static is fine for mockup
     return initialTableData; 
   }, [selectedSensors]);
 
@@ -315,37 +351,37 @@ export default function HistoryPage() {
 
                   {/* 3. Detailed Data Table */}
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-muted-foreground">상세 히스토리 테이블 (Detailed History)</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground">Detailed History Table</h3>
                     <div className="border rounded-md">
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-muted/50">
-                            <TableHead className="w-[150px]">제품 ID (ID)</TableHead>
-                            <TableHead>어디 센서 (Location)</TableHead>
-                            <TableHead>센서 구간 (Section)</TableHead>
-                            <TableHead className="w-[120px]">불량여부 (Status)</TableHead>
-                            <TableHead className="w-[180px] text-right">날짜 (Date)</TableHead>
+                            <TableHead className="w-[150px]">Product ID</TableHead>
+                            <TableHead>Sensor Location</TableHead>
+                            <TableHead>Process Step</TableHead>
+                            <TableHead className="w-[140px]">Status</TableHead>
+                            <TableHead className="w-[180px] text-right">Timestamp</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {tableData.length > 0 ? (
                             tableData.map((row, i) => (
                               <TableRow key={i}>
-                                <TableCell className="font-medium">{row.productId}</TableCell>
-                                <TableCell>
+                                <TableCell className="font-medium text-xs">{row.productId}</TableCell>
+                                <TableCell className="text-xs">
                                   <Badge variant="outline" className="font-normal bg-slate-50 text-slate-600">
                                     {row.location}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className="text-muted-foreground">{row.section}</TableCell>
+                                <TableCell className="text-muted-foreground text-xs">{row.section}</TableCell>
                                 <TableCell>
                                   {row.isDefective ? (
-                                    <Badge variant="destructive" className="font-normal">Defective</Badge>
+                                    <Badge variant="destructive" className="font-normal text-[10px]">{row.statusText}</Badge>
                                   ) : (
-                                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-normal">Normal</Badge>
+                                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-normal text-[10px]">Normal</Badge>
                                   )}
                                 </TableCell>
-                                <TableCell className="text-right text-muted-foreground text-xs">
+                                <TableCell className="text-right text-muted-foreground text-xs font-mono">
                                   {row.date}
                                 </TableCell>
                               </TableRow>
@@ -362,7 +398,7 @@ export default function HistoryPage() {
                     </div>
                     {tableData.length > 0 && (
                       <div className="flex justify-end text-xs text-muted-foreground animate-pulse">
-                        실시간 업데이트: 3초마다 갱신됩니다.
+                        Live Update: Refreshing every 3s
                       </div>
                     )}
                   </div>
