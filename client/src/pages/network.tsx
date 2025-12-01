@@ -131,6 +131,7 @@ export default function NetworkPage() {
   const [threshold, setThreshold] = useState([50]);
   const [note, setNote] = useState("");
   const [selectedNode, setSelectedNode] = useState<any>(nodes[0]);
+  const [showFaultsOnly, setShowFaultsOnly] = useState(false);
 
   // Calculate statistics
   const stats = {
@@ -144,6 +145,10 @@ export default function NetworkPage() {
       equipment: nodes.filter(n => n.type === "Equipment" && n.status === "warning").length,
       sensors: nodes.filter(n => n.type === "Sensor" && n.status === "warning").length,
     }
+  };
+
+  const handleFaultClick = () => {
+    setShowFaultsOnly(true);
   };
 
   return (
@@ -172,7 +177,14 @@ export default function NetworkPage() {
                       Controllers
                     </span>
                     <div className="flex items-center gap-2">
-                      {stats.faults.controllers > 0 && <span className="text-amber-500 font-bold">{stats.faults.controllers} err</span>}
+                      {stats.faults.controllers > 0 && (
+                        <span 
+                          className="text-amber-500 font-bold cursor-pointer hover:underline"
+                          onClick={handleFaultClick}
+                        >
+                          {stats.faults.controllers} err
+                        </span>
+                      )}
                       <span className="text-muted-foreground">{stats.controllers}</span>
                     </div>
                   </div>
@@ -185,7 +197,14 @@ export default function NetworkPage() {
                       Equipment
                     </span>
                     <div className="flex items-center gap-2">
-                      {stats.faults.equipment > 0 && <span className="text-amber-500 font-bold">{stats.faults.equipment} err</span>}
+                      {stats.faults.equipment > 0 && (
+                        <span 
+                          className="text-amber-500 font-bold cursor-pointer hover:underline"
+                          onClick={handleFaultClick}
+                        >
+                          {stats.faults.equipment} err
+                        </span>
+                      )}
                       <span className="text-muted-foreground">{stats.equipment}</span>
                     </div>
                   </div>
@@ -198,7 +217,14 @@ export default function NetworkPage() {
                       Sensors
                     </span>
                     <div className="flex items-center gap-2">
-                      {stats.faults.sensors > 0 && <span className="text-amber-500 font-bold">{stats.faults.sensors} err</span>}
+                      {stats.faults.sensors > 0 && (
+                        <span 
+                          className="text-amber-500 font-bold cursor-pointer hover:underline"
+                          onClick={handleFaultClick}
+                        >
+                          {stats.faults.sensors} err
+                        </span>
+                      )}
                       <span className="text-muted-foreground">{stats.sensors}</span>
                     </div>
                   </div>
@@ -206,7 +232,10 @@ export default function NetworkPage() {
               </div>
               
               {stats.faults.total > 0 && (
-                 <div className="mt-4 pt-3 border-t flex items-center gap-2 text-xs text-amber-600 font-medium">
+                 <div 
+                   className="mt-4 pt-3 border-t flex items-center gap-2 text-xs text-amber-600 font-medium cursor-pointer hover:bg-amber-50 p-1 rounded transition-colors"
+                   onClick={handleFaultClick}
+                 >
                    <AlertTriangle className="w-3 h-3" />
                    {stats.faults.total} nodes require attention
                  </div>
@@ -222,7 +251,10 @@ export default function NetworkPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium">Show Faults Only</label>
-                  <Switch />
+                  <Switch 
+                    checked={showFaultsOnly}
+                    onCheckedChange={setShowFaultsOnly}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium">Show Data Flow</label>
@@ -240,6 +272,13 @@ export default function NetworkPage() {
                 {links.map((link, i) => {
                   const start = nodes.find(n => n.id === link.from)!;
                   const end = nodes.find(n => n.id === link.to)!;
+                  
+                  // Filter links based on node visibility
+                  const isStartVisible = !showFaultsOnly || start.status === 'warning';
+                  const isEndVisible = !showFaultsOnly || end.status === 'warning';
+                  
+                  if (!isStartVisible || !isEndVisible) return null;
+
                   return (
                     <line
                       key={i}
@@ -259,6 +298,10 @@ export default function NetworkPage() {
               {nodes.map((node) => {
                 const Icon = node.icon;
                 const isSelected = selectedNode?.id === node.id;
+                
+                // Filter nodes
+                if (showFaultsOnly && node.status !== 'warning') return null;
+
                 return (
                   <motion.div
                     key={node.id}
