@@ -302,44 +302,38 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">Time</TableHead>
-                  <TableHead>Sensor</TableHead>
-                  <TableHead>Fault Type</TableHead>
-                  <TableHead className="text-right">Category</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentAlarms.length > 0 ? (
-                  recentAlarms.map((alarm, i) => (
-                    <TableRow key={i} className="hover:bg-muted/50">
-                      <TableCell className="font-medium text-xs">{alarm.time}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
-                          {alarm.sensor}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
-                          {alarm.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground capitalize">
-                        {alarm.category}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground text-sm">
-                      No alarms found for this category.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="grid grid-cols-[150px_1fr_1fr_150px] gap-4 px-4 py-2 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
+              <div>Time</div>
+              <div>Sensor</div>
+              <div>Fault Type</div>
+              <div className="text-right">Category</div>
+            </div>
+            <div className="divide-y">
+              {recentAlarms.length > 0 ? (
+                recentAlarms.map((alarm, i) => (
+                  <div key={i} className="grid grid-cols-[150px_1fr_1fr_150px] gap-4 px-4 py-3 hover:bg-muted/50 items-center transition-colors">
+                    <div className="font-medium text-xs">{alarm.time}</div>
+                    <div>
+                      <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
+                        {alarm.sensor}
+                      </Badge>
+                    </div>
+                    <div>
+                      <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
+                        {alarm.type}
+                      </Badge>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground capitalize">
+                      {alarm.category}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-8 text-center text-muted-foreground text-sm">
+                  No alarms found for this category.
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
