@@ -8,9 +8,45 @@ import { BrainCircuit, Play, Download, CheckCircle2, AlertTriangle, XCircle, Loa
 import { useState } from "react";
 
 const models = [
-  { id: "m-01", name: "Vibration_Anomaly_V2", version: "2.1.0", precision: "98.2%", recall: "96.5%", status: "Active", updated: "2h ago" },
-  { id: "m-02", name: "Temp_Spike_Detector", version: "1.0.4", precision: "94.1%", recall: "92.8%", status: "Staging", updated: "1d ago" },
-  { id: "m-03", name: "Pressure_Drop_LSTM", version: "3.2.1", precision: "99.0%", recall: "98.5%", status: "Active", updated: "3d ago" },
+  { 
+    id: "m-01", 
+    name: "Vibration_Anomaly_V2", 
+    version: "2.1.0", 
+    precision: "98.2%", 
+    recall: "96.5%", 
+    status: "Active", 
+    updated: "2h ago",
+    description: "Detects mechanical wear and tear by analyzing frequency spectrums from accelerometer data. Ideal for rotating machinery like motors and gearboxes.",
+    algorithm: "Autoencoder CNN",
+    inputFeatures: "3-axis vibration (X, Y, Z), Frequency (Hz)",
+    trainingData: "500k samples (2023-2024)"
+  },
+  { 
+    id: "m-02", 
+    name: "Temp_Spike_Detector", 
+    version: "1.0.4", 
+    precision: "94.1%", 
+    recall: "92.8%", 
+    status: "Staging", 
+    updated: "1d ago",
+    description: "Real-time monitoring of thermal sensors to identify rapid temperature escalations that indicate overheating or cooling failure.",
+    algorithm: "Isolation Forest",
+    inputFeatures: "Temperature (°C), Ambient Temp (°C)",
+    trainingData: "120k samples (Summer 2023)"
+  },
+  { 
+    id: "m-03", 
+    name: "Pressure_Drop_LSTM", 
+    version: "3.2.1", 
+    precision: "99.0%", 
+    recall: "98.5%", 
+    status: "Active", 
+    updated: "3d ago",
+    description: "Predicts sudden pressure drops in pneumatic lines using sequential data analysis, preventing vacuum seal failures in pick-and-place robots.",
+    algorithm: "LSTM (Long Short-Term Memory)",
+    inputFeatures: "Air Pressure (psi), Flow Rate (L/min)",
+    trainingData: "1M sequential points"
+  },
 ];
 
 export default function ModelsPage() {
@@ -123,6 +159,42 @@ export default function ModelsPage() {
 
         {/* Right: Test Bench */}
         <div className="lg:col-span-2 space-y-6">
+          
+          {/* Model Description Card */}
+          {selectedModel && (
+            <Card className="bg-primary/5 border-primary/20 animate-in fade-in slide-in-from-left-4 duration-300">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-primary">
+                      <BrainCircuit className="w-5 h-5" />
+                      {selectedModel.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+                      {selectedModel.description}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="bg-background">{selectedModel.algorithm}</Badge>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4 text-sm pt-2 border-t border-primary/10 mt-2">
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase">Version</span>
+                    <div className="font-mono">{selectedModel.version}</div>
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase">Input Features</span>
+                    <div>{selectedModel.inputFeatures}</div>
+                  </div>
+                  <div>
+                    <span className="text-xs font-medium text-muted-foreground uppercase">Training Data</span>
+                    <div>{selectedModel.trainingData}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className={`h-full flex flex-col transition-opacity duration-300 ${!selectedModelId ? "opacity-50 pointer-events-none grayscale" : ""}`}>
             <CardHeader className="bg-muted/20 border-b pb-4">
               <div className="flex items-center justify-between">
