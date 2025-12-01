@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import robotArmImage from '@assets/generated_images/semiconductor_robot_arm_in_cleanroom.png';
 
 // Mock Tree Data
 const treeData = [
@@ -488,8 +489,12 @@ export default function HistoryPage() {
                   
                   {/* Equipment Header */}
                   <div className="space-y-2">
-                    <div className="h-32 bg-muted/20 rounded-lg border flex items-center justify-center text-muted-foreground mb-4">
-                      <Cpu className="w-12 h-12 opacity-20" />
+                    <div className="h-40 bg-muted/20 rounded-lg border overflow-hidden mb-4">
+                      <img 
+                        src={robotArmImage} 
+                        alt="Robot Arm K-200" 
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      />
                     </div>
                     <h3 className="font-bold text-lg">{selectedNode ? "Robot Arm K-200" : "Select Equipment"}</h3>
                     <Badge variant="outline" className="font-mono text-xs">EQP-2005-S03</Badge>
