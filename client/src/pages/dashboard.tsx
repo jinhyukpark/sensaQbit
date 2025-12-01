@@ -2,6 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { motion } from "framer-motion";
 
 const kpiData = [
   { title: "Equipment Status", value: "98.2%", sub: "Operational", icon: Server, color: "text-emerald-500" },
@@ -109,8 +110,14 @@ export default function Dashboard() {
 
                      {/* Connection Line */}
                      {i < processSteps.length - 1 && (
-                       <div className="flex-1 h-[2px] bg-border relative mx-2">
-                         <div className="absolute right-0 top-1/2 transform -translate-y-1/2 -mr-1 text-border">
+                       <div className="flex-1 h-[2px] bg-secondary relative mx-2 overflow-hidden">
+                         <motion.div 
+                           className="absolute inset-0 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50 w-1/2"
+                           initial={{ x: "-100%" }}
+                           animate={{ x: "200%" }}
+                           transition={{ duration: 1.5, repeat: Infinity, ease: "linear", repeatDelay: 0.5 }}
+                         />
+                         <div className="absolute right-0 top-1/2 transform -translate-y-1/2 -mr-1 text-border z-10">
                            <ArrowRight className="w-4 h-4" />
                          </div>
                        </div>
