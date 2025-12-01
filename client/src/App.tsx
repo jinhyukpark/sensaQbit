@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import LandingPage from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import HistoryPage from "@/pages/history";
 import ModelsPage from "@/pages/models";
@@ -11,12 +12,16 @@ import { Toaster } from "@/components/ui/toaster";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/history" component={HistoryPage} />
-      <Route path="/models" component={ModelsPage} />
-      <Route path="/reports" component={ReportsPage} />
-      <Route path="/network" component={NetworkPage} />
-      <Route path="/settings" component={SettingsPage} />
+      <Route path="/" component={LandingPage} />
+      
+      {/* FDC Module Routes */}
+      <Route path="/fdc" component={Dashboard} />
+      <Route path="/fdc/history" component={HistoryPage} />
+      <Route path="/fdc/models" component={ModelsPage} />
+      <Route path="/fdc/reports" component={ReportsPage} />
+      <Route path="/fdc/network" component={NetworkPage} />
+      <Route path="/fdc/settings" component={SettingsPage} />
+      
       <Route component={NotFound} />
     </Switch>
   );

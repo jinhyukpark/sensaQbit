@@ -9,19 +9,19 @@ import {
   Settings,
   Activity,
   ChevronLeft,
-  Menu
+  Menu,
+  ArrowLeft
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 
 const navItems = [
-  { name: "Dashboard", icon: LayoutDashboard, href: "/" },
-  { name: "History", icon: History, href: "/history" },
-  { name: "Models", icon: BrainCircuit, href: "/models" },
-  { name: "Reports", icon: FileText, href: "/reports" },
-  { name: "Network", icon: Network, href: "/network" },
-  { name: "Settings", icon: Settings, href: "/settings" },
+  { name: "Dashboard", icon: LayoutDashboard, href: "/fdc" },
+  { name: "History", icon: History, href: "/fdc/history" },
+  { name: "Models", icon: BrainCircuit, href: "/fdc/models" },
+  { name: "Reports", icon: FileText, href: "/fdc/reports" },
+  { name: "Network", icon: Network, href: "/fdc/network" },
+  { name: "Settings", icon: Settings, href: "/fdc/settings" },
 ];
 
 export function Sidebar() {
@@ -36,17 +36,34 @@ export function Sidebar() {
       )}
     >
       {/* Logo Area */}
-      <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-2 font-bold tracking-tight text-lg">
-          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground">
+      <div className="h-14 flex items-center px-4 border-b border-sidebar-border justify-between">
+        <div className={cn("flex items-center gap-2 font-bold tracking-tight text-lg overflow-hidden", collapsed && "w-8")}>
+          <div className="w-8 h-8 shrink-0 rounded bg-primary flex items-center justify-center text-primary-foreground">
             <Activity className="w-5 h-5" />
           </div>
           {!collapsed && <span className="whitespace-nowrap">SensorQubit</span>}
         </div>
       </div>
 
+      {/* Back to Modules Link */}
+      <div className="p-2">
+        <Link href="/">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className={cn(
+              "w-full justify-start text-muted-foreground hover:text-foreground",
+              collapsed && "justify-center px-0"
+            )}
+          >
+            <ArrowLeft className="w-4 h-4 shrink-0" />
+            {!collapsed && <span className="ml-2">All Modules</span>}
+          </Button>
+        </Link>
+      </div>
+
       {/* Navigation */}
-      <div className="flex-1 py-4 overflow-y-auto">
+      <div className="flex-1 py-2 overflow-y-auto">
         <nav className="space-y-1 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
