@@ -307,15 +307,17 @@ export default function NetworkPage() {
                  </div>
                  
                  <div className="grid grid-cols-2 gap-2">
-                   <div className="p-2 bg-muted/30 rounded space-y-1">
-                     <span className="text-[10px] text-muted-foreground uppercase">Type</span>
+                   <div className="p-2 bg-muted/30 rounded flex flex-col">
+                     <span className="text-[10px] text-muted-foreground uppercase mb-1">Type</span>
                      <div className="font-medium">{selectedNode.type}</div>
                    </div>
-                   <div className="p-2 bg-muted/30 rounded space-y-1">
-                     <span className="text-[10px] text-muted-foreground uppercase">Status</span>
-                     <Badge variant={selectedNode.status === "warning" ? "destructive" : "default"} className={selectedNode.status === "warning" ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}>
-                       {selectedNode.status === "warning" ? "Warning" : "Normal"}
-                     </Badge>
+                   <div className="p-2 bg-muted/30 rounded flex flex-col">
+                     <span className="text-[10px] text-muted-foreground uppercase mb-1">Status</span>
+                     <div className="flex-1 flex items-center">
+                       <Badge variant={selectedNode.status === "warning" ? "destructive" : "default"} className={selectedNode.status === "warning" ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}>
+                         {selectedNode.status === "warning" ? "Warning" : "Normal"}
+                       </Badge>
+                     </div>
                    </div>
                  </div>
 
