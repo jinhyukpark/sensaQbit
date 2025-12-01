@@ -1,5 +1,7 @@
 import { Switch, Route } from "wouter";
 import LandingPage from "@/pages/landing";
+import LoginPage from "@/pages/login";
+import RegisterPage from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import HistoryPage from "@/pages/history";
 import ModelsPage from "@/pages/models";
@@ -14,6 +16,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       
       {/* FDC Module Routes */}
       <Route path="/fdc" component={Dashboard} />
