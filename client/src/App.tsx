@@ -8,6 +8,7 @@ import NetworkPage from "@/pages/network";
 import SettingsPage from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 import { Toaster } from "@/components/ui/toaster";
+import { FilterProvider } from "@/lib/filter-context";
 
 function Router() {
   return (
@@ -29,10 +30,10 @@ function Router() {
 
 function App() {
   return (
-    <>
+    <FilterProvider>
       <Router />
       <Toaster />
-    </>
+    </FilterProvider>
   );
 }
 

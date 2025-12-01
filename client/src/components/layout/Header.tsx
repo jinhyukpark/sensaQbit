@@ -16,9 +16,11 @@ import { CalendarIcon, Bell } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useFilter } from "@/lib/filter-context";
 
 export function Header({ title }: { title: string }) {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const { factory, setFactory, process, setProcess, equipment, setEquipment } = useFilter();
 
   return (
     <header className="h-14 border-b bg-background flex items-center justify-between px-6 sticky top-0 z-10">
@@ -31,31 +33,34 @@ export function Header({ title }: { title: string }) {
       <div className="flex items-center gap-3">
         {/* Context Selectors */}
         <div className="flex items-center gap-2 mr-4">
-          <Select defaultValue="factory-a">
+          <Select value={factory} onValueChange={setFactory}>
             <SelectTrigger className="w-[140px] h-8 text-xs">
               <SelectValue placeholder="Select Factory" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Factories</SelectItem>
               <SelectItem value="factory-a">Factory Alpha</SelectItem>
               <SelectItem value="factory-b">Factory Beta</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select defaultValue="process-1">
+          <Select value={process} onValueChange={setProcess}>
             <SelectTrigger className="w-[140px] h-8 text-xs">
               <SelectValue placeholder="Select Process" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Processes</SelectItem>
               <SelectItem value="process-1">Etching Line A</SelectItem>
               <SelectItem value="process-2">Assembly Line B</SelectItem>
             </SelectContent>
           </Select>
 
-          <Select defaultValue="equip-1">
+          <Select value={equipment} onValueChange={setEquipment}>
             <SelectTrigger className="w-[140px] h-8 text-xs">
               <SelectValue placeholder="Select Equipment" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All Equipment</SelectItem>
               <SelectItem value="equip-1">Robot Arm K-200</SelectItem>
               <SelectItem value="equip-2">Conveyor Belt M-4</SelectItem>
             </SelectContent>

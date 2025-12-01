@@ -12,22 +12,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useFilter } from "@/lib/filter-context";
+import { useMemo } from "react";
 
-const kpiData = [
+// Original Data Sets
+const kpiDataAll = [
   { title: "Equipment Status", value: "98.2%", sub: "Operational", icon: Server, color: "text-emerald-500" },
   { title: "Active Faults", value: "3", sub: "Requires Attention", icon: AlertTriangle, color: "text-destructive", isAlert: true },
   { title: "Quality Rate", value: "99.9%", sub: "+0.2% vs last week", icon: CheckCircle2, color: "text-blue-500" },
   { title: "Avg Detection Time", value: "42ms", sub: "Real-time", icon: Clock, color: "text-purple-500" },
 ];
 
-const sensorData = Array.from({ length: 20 }, (_, i) => ({
+const kpiDataFiltered = [
+  { title: "Equipment Status", value: "94.5%", sub: "Maintenance Req", icon: Server, color: "text-amber-500" },
+  { title: "Active Faults", value: "1", sub: "Critical Error", icon: AlertTriangle, color: "text-destructive", isAlert: true },
+  { title: "Quality Rate", value: "98.1%", sub: "-1.2% vs last week", icon: CheckCircle2, color: "text-amber-500" },
+  { title: "Avg Detection Time", value: "156ms", sub: "Latency Detected", icon: Clock, color: "text-purple-500" },
+];
+
+const sensorDataAll = Array.from({ length: 20 }, (_, i) => ({
   time: `${i}:00`,
   vibration: Math.random() * 40 + 20,
   temperature: Math.random() * 20 + 60,
   pressure: Math.random() * 10 + 90,
 }));
 
-const faultData = [
+const sensorDataFiltered = Array.from({ length: 20 }, (_, i) => ({
+  time: `${i}:00`,
+  vibration: Math.random() * 80 + 40, // Higher vibration
+  temperature: Math.random() * 10 + 80, // Higher temp
+  pressure: Math.random() * 20 + 40, // Lower pressure
+}));
+
+const faultDataAll = [
   { name: "Overheat", count: 12 },
   { name: "Vibration", count: 8 },
   { name: "Pressure Drop", count: 5 },
@@ -35,7 +52,15 @@ const faultData = [
   { name: "Comm Error", count: 2 },
 ];
 
-const recentAlarms = [
+const faultDataFiltered = [
+  { name: "Overheat", count: 45 },
+  { name: "Vibration", count: 2 },
+  { name: "Pressure Drop", count: 1 },
+  { name: "Sensor Drift", count: 0 },
+  { name: "Comm Error", count: 0 },
+];
+
+const recentAlarmsAll = [
   { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
   { time: "6:47:50 AM", sensor: "Temp Sensor #4", type: "Spike", color: "bg-blue-100 text-blue-800" },
   { time: "6:46:50 AM", sensor: "Pressure Gauge A", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
@@ -44,6 +69,12 @@ const recentAlarms = [
   { time: "6:43:50 AM", sensor: "Flow Rate Meter", type: "LowSignal", color: "bg-blue-100 text-blue-800" },
   { time: "6:42:50 AM", sensor: "Vibration Sensor Z-Axis", type: "Drift", color: "bg-blue-100 text-blue-800" },
   { time: "6:41:50 AM", sensor: "Temp Sensor #2", type: "Spike", color: "bg-blue-100 text-blue-800" },
+];
+
+const recentAlarmsFiltered = [
+  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical", color: "bg-red-100 text-red-800" },
+  { time: "6:45:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical", color: "bg-red-100 text-red-800" },
+  { time: "6:42:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical", color: "bg-red-100 text-red-800" },
 ];
 
 const processSteps = [
@@ -55,8 +86,27 @@ const processSteps = [
 ];
 
 export default function Dashboard() {
+  const { factory, process, equipment } = useFilter();
+  
+  // Simple logic to switch data based on filters
+  const isFiltered = factory !== "all" || process !== "all" || equipment !== "all";
+  
+  const kpiData = isFiltered ? kpiDataFiltered : kpiDataAll;
+  const sensorData = isFiltered ? sensorDataFiltered : sensorDataAll;
+  const faultData = isFiltered ? faultDataFiltered : faultDataAll;
+  const recentAlarms = isFiltered ? recentAlarmsFiltered : recentAlarmsAll;
+
+  const filteredTitle = useMemo(() => {
+    if (!isFiltered) return "Overview (All Factories)";
+    const parts = [];
+    if (factory !== "all") parts.push(factory === "factory-a" ? "Factory Alpha" : "Factory Beta");
+    if (process !== "all") parts.push(process === "process-1" ? "Etching Line A" : "Assembly Line B");
+    if (equipment !== "all") parts.push(equipment === "equip-1" ? "Robot Arm K-200" : "Conveyor Belt M-4");
+    return `Overview: ${parts.join(" > ")}`;
+  }, [factory, process, equipment, isFiltered]);
+
   return (
-    <AppLayout title="Overview">
+    <AppLayout title={filteredTitle}>
       <div className="space-y-6">
         
         {/* KPI Grid */}
