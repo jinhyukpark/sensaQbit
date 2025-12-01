@@ -68,7 +68,7 @@ export function Header({ title }: { title: string }) {
             <Button
               variant={"outline"}
               className={cn(
-                "w-[140px] h-8 justify-start text-left font-normal text-xs",
+                "w-[220px] h-8 justify-start text-left font-normal text-xs",
                 !date && "text-muted-foreground"
               )}
             >
