@@ -34,7 +34,7 @@ export default function NetworkPage() {
 
   return (
     <AppLayout title="Network Graph">
-      <div className="relative h-full w-full border rounded-lg overflow-hidden bg-slate-50">
+      <div className="relative h-full w-full overflow-hidden bg-background">
         
         {/* Controls Overlay */}
         <div className="absolute top-4 left-4 z-10 w-64 space-y-4">
