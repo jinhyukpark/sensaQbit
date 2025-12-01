@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves, GripVertical } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useFilter } from "@/lib/filter-context";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 // Original Data Sets
@@ -101,6 +101,49 @@ export default function Dashboard() {
   const { factory, process, equipment } = useFilter();
   const [activeFilter, setActiveFilter] = useState<string>("all");
   
+  // Resizable Columns State
+  const [colWidths, setColWidths] = useState<number[]>([150, 300, 300, 200]);
+  const isResizing = useRef<number>(-1);
+  const startX = useRef<number>(0);
+  const startWidth = useRef<number>(0);
+
+  // Column resize handlers
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizing.current >= 0) {
+        const delta = e.clientX - startX.current;
+        const newWidths = [...colWidths];
+        newWidths[isResizing.current] = Math.max(100, startWidth.current + delta);
+        setColWidths(newWidths);
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isResizing.current >= 0) {
+        isResizing.current = -1;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [colWidths]);
+
+  const startResize = (index: number, e: React.MouseEvent) => {
+    isResizing.current = index;
+    startX.current = e.clientX;
+    startWidth.current = colWidths[index];
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  
   // Simple logic to switch data based on filters
   const isFiltered = factory !== "all" || process !== "all" || equipment !== "all";
   
@@ -122,6 +165,9 @@ export default function Dashboard() {
     if (equipment !== "all") parts.push(equipment === "equip-1" ? "Robot Arm K-200" : "Conveyor Belt M-4");
     return `Overview: ${parts.join(" > ")}`;
   }, [factory, process, equipment, isFiltered]);
+
+  // Dynamic grid style
+  const gridTemplateColumns = colWidths.map(w => `${w}px`).join(' ');
 
   return (
     <AppLayout title={filteredTitle}>
@@ -301,38 +347,46 @@ export default function Dashboard() {
               </ToggleGroup>
             </div>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="grid grid-cols-[150px_1fr_1fr_150px] border-b bg-muted/50 text-xs font-medium text-muted-foreground">
-              <div className="px-4 py-2 border-r border-border/50">Time</div>
-              <div className="px-4 py-2 border-r border-border/50">Sensor</div>
-              <div className="px-4 py-2 border-r border-border/50">Fault Type</div>
-              <div className="px-4 py-2 text-right">Category</div>
-            </div>
-            <div className="divide-y">
-              {recentAlarms.length > 0 ? (
-                recentAlarms.map((alarm, i) => (
-                  <div key={i} className="grid grid-cols-[150px_1fr_1fr_150px] hover:bg-muted/50 items-center transition-colors">
-                    <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center">{alarm.time}</div>
-                    <div className="px-4 py-3 border-r border-border/50 h-full flex items-center">
-                      <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
-                        {alarm.sensor}
-                      </Badge>
-                    </div>
-                    <div className="px-4 py-3 border-r border-border/50 h-full flex items-center">
-                      <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
-                        {alarm.type}
-                      </Badge>
-                    </div>
-                    <div className="px-4 py-3 text-right text-xs text-muted-foreground capitalize h-full flex items-center justify-end">
-                      {alarm.category}
-                    </div>
+          <CardContent className="p-0 overflow-auto">
+            <div className="min-w-max">
+              <div className="grid border-b bg-muted/50 text-xs font-medium text-muted-foreground" style={{ gridTemplateColumns }}>
+                {/* Header with Resizers */}
+                {['Time', 'Sensor', 'Fault Type', 'Category'].map((header, index) => (
+                  <div key={header} className="relative px-4 py-2 border-r border-border/50 flex items-center justify-between group select-none">
+                    <span className={header === 'Category' ? 'text-left' : ''}>{header}</span>
+                    <div 
+                      className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors z-10"
+                      onMouseDown={(e) => startResize(index, e)}
+                    />
                   </div>
-                ))
-              ) : (
-                <div className="p-8 text-center text-muted-foreground text-sm">
-                  No alarms found for this category.
-                </div>
-              )}
+                ))}
+              </div>
+              <div className="divide-y">
+                {recentAlarms.length > 0 ? (
+                  recentAlarms.map((alarm, i) => (
+                    <div key={i} className="grid hover:bg-muted/50 items-center transition-colors" style={{ gridTemplateColumns }}>
+                      <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">{alarm.time}</div>
+                      <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
+                        <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
+                          {alarm.sensor}
+                        </Badge>
+                      </div>
+                      <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
+                        <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
+                          {alarm.type}
+                        </Badge>
+                      </div>
+                      <div className="px-4 py-3 text-left text-xs text-muted-foreground capitalize h-full flex items-center truncate">
+                        {alarm.category}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-muted-foreground text-sm">
+                    No alarms found for this category.
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
