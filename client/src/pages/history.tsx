@@ -18,6 +18,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock Tree Data
 const treeData = [
@@ -169,6 +176,7 @@ export default function HistoryPage() {
   const [activeCategory, setActiveCategory] = useState<string>("temp");
   // Default select some sensors to show data immediately
   const [selectedSensors, setSelectedSensors] = useState<string[]>(["temp-0", "temp-1"]);
+  const [filterStatus, setFilterStatus] = useState<"all" | "fault">("all");
   
   // Resizable Columns State
   const [colWidths, setColWidths] = useState<number[]>([180, 200, 200, 120, 180]);
@@ -233,8 +241,15 @@ export default function HistoryPage() {
   // Filtered table data (mock)
   const tableData = useMemo(() => {
     if (selectedSensors.length === 0) return [];
-    return initialTableData; 
-  }, [selectedSensors]);
+    
+    let data = initialTableData;
+    
+    if (filterStatus === "fault") {
+      data = data.filter(d => d.isDefective);
+    }
+    
+    return data;
+  }, [selectedSensors, filterStatus]);
 
   // Dynamic grid style
   const gridTemplateColumns = colWidths.map(w => `${w}px`).join(' ');
@@ -387,7 +402,20 @@ export default function HistoryPage() {
 
                   {/* 3. Detailed Data Table */}
                   <div className="space-y-2">
-                    <h3 className="text-sm font-semibold text-muted-foreground">Detailed History Table</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-muted-foreground">Detailed History Table</h3>
+                      <div className="flex items-center gap-2">
+                        <Select value={filterStatus} onValueChange={(val: "all" | "fault") => setFilterStatus(val)}>
+                          <SelectTrigger className="h-8 w-[140px] text-xs bg-background">
+                            <SelectValue placeholder="Filter Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">View All</SelectItem>
+                            <SelectItem value="fault">Fault Only</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <div className="border rounded-md overflow-auto">
                       <div className="min-w-max">
                         {/* Table Header */}
