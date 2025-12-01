@@ -71,24 +71,14 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-6 overflow-x-auto">
-            <div className="min-w-[800px] flex items-center justify-between relative">
+            <div className="min-w-[800px] flex items-center justify-between">
               
-              {/* Connecting Line */}
-              <div className="absolute top-1/2 left-0 w-full h-[2px] bg-border -z-10 transform -translate-y-1/2 px-10"></div>
-
               {processSteps.map((step, i) => {
                 const isWarning = step.status === "warning";
                 return (
-                  <div key={step.name} className="relative group">
-                     {/* Connector Arrow (except last) */}
-                     {i < processSteps.length - 1 && (
-                       <div className="absolute -right-12 top-1/2 transform -translate-y-1/2 text-muted-foreground/30">
-                         <ArrowRight className="w-6 h-6" />
-                       </div>
-                     )}
-
+                  <div key={step.name} className="flex items-center flex-1 last:flex-none">
                      <div className={`
-                        relative w-40 p-3 rounded-lg border-2 bg-background transition-all duration-300 hover:shadow-md hover:-translate-y-1
+                        relative w-40 p-3 rounded-lg border-2 bg-background transition-all duration-300 hover:shadow-md hover:-translate-y-1 z-10
                         ${isWarning ? 'border-amber-500/50 bg-amber-50/50' : 'border-border hover:border-primary/50'}
                      `}>
                         <div className="flex items-center justify-between mb-2">
@@ -116,6 +106,15 @@ export default function Dashboard() {
                           )}
                         </div>
                      </div>
+
+                     {/* Connection Line */}
+                     {i < processSteps.length - 1 && (
+                       <div className="flex-1 h-[2px] bg-border relative mx-2">
+                         <div className="absolute right-0 top-1/2 transform -translate-y-1/2 -mr-1 text-border">
+                           <ArrowRight className="w-4 h-4" />
+                         </div>
+                       </div>
+                     )}
                   </div>
                 );
               })}
