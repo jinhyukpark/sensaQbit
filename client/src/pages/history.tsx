@@ -309,7 +309,7 @@ export default function HistoryPage() {
           <ResizableHandle />
 
           {/* Right Content: Analytics */}
-          <ResizablePanel defaultSize={80}>
+          <ResizablePanel defaultSize={60}>
             <div className="h-full p-6 overflow-y-auto space-y-6 bg-background/50">
               
               {/* Summary Cards */}
@@ -472,6 +472,92 @@ export default function HistoryPage() {
                 </CardContent>
               </Card>
 
+            </div>
+          </ResizablePanel>
+          
+          <ResizableHandle />
+          
+          {/* Right Sidebar: Equipment Detail */}
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+            <div className="h-full flex flex-col border-l">
+              <div className="p-4 border-b bg-muted/10">
+                <h2 className="font-semibold text-sm">Equipment Details</h2>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-4 space-y-6">
+                  
+                  {/* Equipment Header */}
+                  <div className="space-y-2">
+                    <div className="h-32 bg-muted/20 rounded-lg border flex items-center justify-center text-muted-foreground mb-4">
+                      <Cpu className="w-12 h-12 opacity-20" />
+                    </div>
+                    <h3 className="font-bold text-lg">{selectedNode ? "Robot Arm K-200" : "Select Equipment"}</h3>
+                    <Badge variant="outline" className="font-mono text-xs">EQP-2005-S03</Badge>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                      Operational
+                    </div>
+                  </div>
+
+                  {/* Specifications */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Specifications</h4>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="text-muted-foreground">Model</div>
+                      <div className="font-medium text-right">K-Series 200</div>
+                      
+                      <div className="text-muted-foreground">Install Date</div>
+                      <div className="font-medium text-right">2023-05-15</div>
+                      
+                      <div className="text-muted-foreground">Last Maint</div>
+                      <div className="font-medium text-right">2024-11-20</div>
+                      
+                      <div className="text-muted-foreground">Cycle Time</div>
+                      <div className="font-medium text-right">4.2s</div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Status</h4>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span>Load</span>
+                          <span className="font-medium">78%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 w-[78%]"></div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span>Temperature</span>
+                          <span className="font-medium">42°C</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500 w-[42%]"></div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span>Vibration</span>
+                          <span className="font-medium text-amber-600">Warning</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-500 w-[85%]"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4">
+                     <Button className="w-full" variant="outline" size="sm">View Maintenance Log</Button>
+                  </div>
+
+                </div>
+              </ScrollArea>
             </div>
           </ResizablePanel>
 
