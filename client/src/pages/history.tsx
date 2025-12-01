@@ -168,20 +168,20 @@ export default function HistoryPage() {
               <div className="grid grid-cols-3 gap-4">
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">12</div>
-                    <p className="text-xs text-muted-foreground">Total Faults (Last 24h)</p>
+                    <div className="text-2xl font-bold">15,240</div>
+                    <p className="text-xs text-muted-foreground">총가공수 (Total Processed)</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-emerald-600">98.5%</div>
-                    <p className="text-xs text-muted-foreground">Equipment Uptime</p>
+                    <div className="text-2xl font-bold text-emerald-600">13,716 (90%)</div>
+                    <p className="text-xs text-muted-foreground">정상제품 (Normal Products)</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">Vibration</div>
-                    <p className="text-xs text-muted-foreground">Most Frequent Issue</p>
+                    <div className="text-2xl font-bold text-destructive">1,524 (10%)</div>
+                    <p className="text-xs text-muted-foreground">불량 제품 (Defective Products)</p>
                   </CardContent>
                 </Card>
               </div>
