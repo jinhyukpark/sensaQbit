@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronRight, Search, Cpu, Factory, Settings2, AlertCircle, CheckSquare, Square } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -170,6 +170,49 @@ export default function HistoryPage() {
   // Default select some sensors to show data immediately
   const [selectedSensors, setSelectedSensors] = useState<string[]>(["temp-0", "temp-1"]);
   
+  // Resizable Columns State
+  const [colWidths, setColWidths] = useState<number[]>([180, 200, 200, 120, 180]);
+  const isResizing = useRef<number>(-1);
+  const startX = useRef<number>(0);
+  const startWidth = useRef<number>(0);
+
+  // Column resize handlers
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizing.current >= 0) {
+        const delta = e.clientX - startX.current;
+        const newWidths = [...colWidths];
+        newWidths[isResizing.current] = Math.max(100, startWidth.current + delta);
+        setColWidths(newWidths);
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (isResizing.current >= 0) {
+        isResizing.current = -1;
+        document.body.style.cursor = 'default';
+        document.body.style.userSelect = 'auto';
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [colWidths]);
+
+  const startResize = (index: number, e: React.MouseEvent) => {
+    isResizing.current = index;
+    startX.current = e.clientX;
+    startWidth.current = colWidths[index];
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  
   // Filter logic
   const currentSensors = mockSensors[activeCategory] || [];
 
@@ -189,19 +232,12 @@ export default function HistoryPage() {
 
   // Filtered table data (mock)
   const tableData = useMemo(() => {
-    // In a real app, this would filter based on selectedSensors
-    // For mockup, we show data regardless or regenerate based on selection count
-    // But user asked for "dummy data in each list" so let's always show robust data
-    // if (selectedSensors.length === 0) return []; // REMOVED to show data by default or based on initial selection
-    
-    // If nothing selected, maybe show nothing? Or show all? 
-    // User said "put dummy data in each list". 
-    // Let's stick to "show data if selected", but we pre-selected some sensors above.
     if (selectedSensors.length === 0) return [];
-    
-    // Return slightly different data to simulate filtering if needed, but static is fine for mockup
     return initialTableData; 
   }, [selectedSensors]);
+
+  // Dynamic grid style
+  const gridTemplateColumns = colWidths.map(w => `${w}px`).join(' ');
 
   return (
     <AppLayout title="History Analysis">
@@ -352,49 +388,51 @@ export default function HistoryPage() {
                   {/* 3. Detailed Data Table */}
                   <div className="space-y-2">
                     <h3 className="text-sm font-semibold text-muted-foreground">Detailed History Table</h3>
-                    <div className="border rounded-md">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/50">
-                            <TableHead className="w-[150px]">Product ID</TableHead>
-                            <TableHead>Sensor Location</TableHead>
-                            <TableHead>Process Step</TableHead>
-                            <TableHead className="w-[140px]">Status</TableHead>
-                            <TableHead className="w-[180px] text-right">Timestamp</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
+                    <div className="border rounded-md overflow-auto">
+                      <div className="min-w-max">
+                        {/* Table Header */}
+                        <div className="grid border-b bg-muted/50 text-xs font-medium text-muted-foreground" style={{ gridTemplateColumns }}>
+                          {['Product ID', 'Sensor Location', 'Process Step', 'Status', 'Timestamp'].map((header, index) => (
+                            <div key={header} className={`relative px-4 py-2 border-r border-border/50 flex items-center justify-between group select-none ${index === 4 ? 'text-right' : ''}`}>
+                              <span className={index === 4 ? 'w-full text-right' : ''}>{header}</span>
+                              <div 
+                                className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors z-10"
+                                onMouseDown={(e) => startResize(index, e)}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Table Body */}
+                        <div className="divide-y">
                           {tableData.length > 0 ? (
                             tableData.map((row, i) => (
-                              <TableRow key={i}>
-                                <TableCell className="font-medium text-xs">{row.productId}</TableCell>
-                                <TableCell className="text-xs">
+                              <div key={i} className="grid hover:bg-muted/50 items-center transition-colors" style={{ gridTemplateColumns }}>
+                                <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">{row.productId}</div>
+                                <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
                                   <Badge variant="outline" className="font-normal bg-slate-50 text-slate-600">
                                     {row.location}
                                   </Badge>
-                                </TableCell>
-                                <TableCell className="text-muted-foreground text-xs">{row.section}</TableCell>
-                                <TableCell>
+                                </div>
+                                <div className="px-4 py-3 border-r border-border/50 h-full flex items-center text-muted-foreground text-xs truncate">{row.section}</div>
+                                <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
                                   {row.isDefective ? (
                                     <Badge variant="destructive" className="font-normal text-[10px]">{row.statusText}</Badge>
                                   ) : (
                                     <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-normal text-[10px]">Normal</Badge>
                                   )}
-                                </TableCell>
-                                <TableCell className="text-right text-muted-foreground text-xs font-mono">
+                                </div>
+                                <div className="px-4 py-3 text-right text-muted-foreground text-xs font-mono h-full flex items-center justify-end truncate">
                                   {row.date}
-                                </TableCell>
-                              </TableRow>
+                                </div>
+                              </div>
                             ))
                           ) : (
-                            <TableRow>
-                              <TableCell colSpan={5} className="h-24 text-center text-muted-foreground text-sm">
-                                Please select sensors to view detailed telemetry data.
-                              </TableCell>
-                            </TableRow>
+                            <div className="p-8 text-center text-muted-foreground text-sm">
+                              Please select sensors to view detailed telemetry data.
+                            </div>
                           )}
-                        </TableBody>
-                      </Table>
+                        </div>
+                      </div>
                     </div>
                     {tableData.length > 0 && (
                       <div className="flex justify-end text-xs text-muted-foreground animate-pulse">
