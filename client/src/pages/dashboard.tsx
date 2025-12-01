@@ -302,28 +302,28 @@ export default function Dashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="grid grid-cols-[150px_1fr_1fr_150px] gap-4 px-4 py-2 border-b bg-muted/50 text-xs font-medium text-muted-foreground">
-              <div>Time</div>
-              <div>Sensor</div>
-              <div>Fault Type</div>
-              <div className="text-right">Category</div>
+            <div className="grid grid-cols-[150px_1fr_1fr_150px] border-b bg-muted/50 text-xs font-medium text-muted-foreground">
+              <div className="px-4 py-2 border-r border-border/50">Time</div>
+              <div className="px-4 py-2 border-r border-border/50">Sensor</div>
+              <div className="px-4 py-2 border-r border-border/50">Fault Type</div>
+              <div className="px-4 py-2 text-right">Category</div>
             </div>
             <div className="divide-y">
               {recentAlarms.length > 0 ? (
                 recentAlarms.map((alarm, i) => (
-                  <div key={i} className="grid grid-cols-[150px_1fr_1fr_150px] gap-4 px-4 py-3 hover:bg-muted/50 items-center transition-colors">
-                    <div className="font-medium text-xs">{alarm.time}</div>
-                    <div>
+                  <div key={i} className="grid grid-cols-[150px_1fr_1fr_150px] hover:bg-muted/50 items-center transition-colors">
+                    <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center">{alarm.time}</div>
+                    <div className="px-4 py-3 border-r border-border/50 h-full flex items-center">
                       <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
                         {alarm.sensor}
                       </Badge>
                     </div>
-                    <div>
+                    <div className="px-4 py-3 border-r border-border/50 h-full flex items-center">
                       <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
                         {alarm.type}
                       </Badge>
                     </div>
-                    <div className="text-right text-xs text-muted-foreground capitalize">
+                    <div className="px-4 py-3 text-right text-xs text-muted-foreground capitalize h-full flex items-center justify-end">
                       {alarm.category}
                     </div>
                   </div>
