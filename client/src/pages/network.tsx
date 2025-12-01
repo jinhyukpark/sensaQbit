@@ -25,7 +25,10 @@ const generateNodes = () => {
   nodes.push({ 
     id: 0, x: centerX, y: centerY, size: 70, 
     color: "bg-blue-600", label: "Central Hub", 
-    icon: Server, type: "hub" 
+    icon: Server, type: "Server",
+    manufacturer: "Cisco Systems", installDate: "2023-01-15",
+    firmware: "v12.4.2", location: "Server Room A",
+    status: "normal"
   });
 
   // Level 1: Zone Controllers (6 nodes)
@@ -40,7 +43,10 @@ const generateNodes = () => {
       color: "bg-indigo-500",
       label: `Zone Ctrl ${i+1}`,
       icon: Cpu,
-      type: "controller"
+      type: "Controller",
+      manufacturer: "Siemens", installDate: "2023-02-10",
+      firmware: "v4.1.0", location: `Zone ${String.fromCharCode(65+i)}`,
+      status: "normal"
     });
   }
 
@@ -56,7 +62,10 @@ const generateNodes = () => {
       color: "bg-slate-500",
       label: `EQ-${100+i}`,
       icon: Database,
-      type: "equipment"
+      type: "Equipment",
+      manufacturer: "Fanuc Robotics", installDate: "2023-03-22",
+      firmware: "v2.0.1", location: `Line ${Math.floor(i/3)+1}`,
+      status: "normal"
     });
   }
 
@@ -73,7 +82,9 @@ const generateNodes = () => {
       color: isWarning ? "bg-amber-500" : "bg-emerald-500",
       label: `S-${i}`,
       icon: isWarning ? AlertTriangle : Activity,
-      type: "sensor",
+      type: "Sensor",
+      manufacturer: "Keyence", installDate: "2023-04-05",
+      firmware: "v1.1.5", location: `Point ${i}`,
       status: isWarning ? "warning" : "normal"
     });
   }
@@ -119,6 +130,7 @@ const links = generateLinks(nodes);
 export default function NetworkPage() {
   const [threshold, setThreshold] = useState([50]);
   const [note, setNote] = useState("");
+  const [selectedNode, setSelectedNode] = useState<any>(nodes[0]);
 
   return (
     <AppLayout title="Network Graph">
@@ -173,10 +185,11 @@ export default function NetworkPage() {
               
               {nodes.map((node) => {
                 const Icon = node.icon;
+                const isSelected = selectedNode?.id === node.id;
                 return (
                   <motion.div
                     key={node.id}
-                    className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer hover:ring-4 ring-primary/20 transition-all ${node.color} text-white`}
+                    className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all ${node.color} text-white ${isSelected ? 'ring-4 ring-white ring-offset-2 ring-offset-primary' : 'hover:ring-4 hover:ring-primary/20'}`}
                     style={{
                       width: node.size,
                       height: node.size,
@@ -188,6 +201,7 @@ export default function NetworkPage() {
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: node.id * 0.01 }}
+                    onClick={() => setSelectedNode(node)}
                     drag
                     dragConstraints={{ left: 0, right: 1200, top: 0, bottom: 800 }}
                   >
@@ -212,22 +226,57 @@ export default function NetworkPage() {
             <h3 className="font-medium mb-4 flex items-center gap-2">
               <FileText className="w-4 h-4 text-primary" /> Node Details
             </h3>
-            <div className="space-y-4 text-sm">
-               <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                 <span className="text-muted-foreground">ID</span>
-                 <span className="font-mono font-bold">#SENS-442</span>
-               </div>
-               <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                 <span className="text-muted-foreground">Status</span>
-                 <Badge className="bg-amber-500">Warning</Badge>
-               </div>
-               <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
-                 <span className="text-muted-foreground">Health Score</span>
-                 <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
-                   <div className="h-full w-[70%] bg-amber-500"></div>
+            {selectedNode ? (
+              <div className="space-y-4 text-sm animate-in fade-in slide-in-from-right-4 duration-300" key={selectedNode.id}>
+                 <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
+                   <span className="text-muted-foreground">ID</span>
+                   <span className="font-mono font-bold">#{selectedNode.type.substring(0,4).toUpperCase()}-{selectedNode.id}</span>
                  </div>
-               </div>
-            </div>
+                 
+                 <div className="grid grid-cols-2 gap-2">
+                   <div className="p-2 bg-muted/30 rounded space-y-1">
+                     <span className="text-[10px] text-muted-foreground uppercase">Type</span>
+                     <div className="font-medium">{selectedNode.type}</div>
+                   </div>
+                   <div className="p-2 bg-muted/30 rounded space-y-1">
+                     <span className="text-[10px] text-muted-foreground uppercase">Status</span>
+                     <Badge variant={selectedNode.status === "warning" ? "destructive" : "default"} className={selectedNode.status === "warning" ? "bg-amber-500 hover:bg-amber-600" : "bg-emerald-500 hover:bg-emerald-600"}>
+                       {selectedNode.status === "warning" ? "Warning" : "Normal"}
+                     </Badge>
+                   </div>
+                 </div>
+
+                 <div className="p-3 bg-muted/30 rounded space-y-2">
+                    <div className="grid grid-cols-2 gap-y-2 text-xs">
+                      <span className="text-muted-foreground">Location:</span>
+                      <span className="font-medium text-right">{selectedNode.location}</span>
+                      
+                      <span className="text-muted-foreground">Manufacturer:</span>
+                      <span className="font-medium text-right">{selectedNode.manufacturer}</span>
+                      
+                      <span className="text-muted-foreground">Installed:</span>
+                      <span className="font-medium text-right">{selectedNode.installDate}</span>
+                      
+                      <span className="text-muted-foreground">Firmware:</span>
+                      <span className="font-medium text-right">{selectedNode.firmware}</span>
+                    </div>
+                 </div>
+
+                 <div className="flex justify-between items-center p-2 bg-muted/30 rounded">
+                   <span className="text-muted-foreground">Health Score</span>
+                   <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+                     <div 
+                       className={`h-full w-[${selectedNode.status === 'warning' ? '70%' : '98%'}] transition-all duration-500 ${selectedNode.status === 'warning' ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                       style={{ width: selectedNode.status === 'warning' ? '70%' : '98%' }}
+                     ></div>
+                   </div>
+                 </div>
+              </div>
+            ) : (
+              <div className="h-40 flex items-center justify-center text-muted-foreground text-sm italic">
+                Select a node to view details
+              </div>
+            )}
           </div>
 
           {/* Tabs Area (Flexible) */}
