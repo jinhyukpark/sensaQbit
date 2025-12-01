@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BrainCircuit, Play, Download } from "lucide-react";
+import { BrainCircuit, Play, Download, CheckCircle2, AlertTriangle, XCircle, Loader2, BarChart3, Activity } from "lucide-react";
+import { useState } from "react";
 
 const models = [
   { id: "m-01", name: "Vibration_Anomaly_V2", version: "2.1.0", precision: "98.2%", recall: "96.5%", status: "Active", updated: "2h ago" },
@@ -13,13 +14,51 @@ const models = [
 ];
 
 export default function ModelsPage() {
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const [lastResult, setLastResult] = useState<any>(null);
+
+  const selectedModel = models.find(m => m.id === selectedModelId);
+
+  const handleRunModel = () => {
+    setIsRunning(true);
+    setLastResult(null);
+    
+    // Mock simulation
+    setTimeout(() => {
+      setIsRunning(false);
+      setLastResult({
+        id: `T-${Math.floor(Math.random() * 10000)}`,
+        status: "Completed",
+        timestamp: new Date().toLocaleString(),
+        anomalies: 3,
+        accuracy: "98.5%",
+        f1Score: "0.97",
+        confusionMatrix: {
+          tp: 420,
+          fp: 12,
+          fn: 8,
+          tn: 1200
+        },
+        confidence: [0.98, 0.92, 0.99, 0.85, 0.94],
+        predictions: [
+           { time: "10:00:01", type: "Normal", conf: "99%" },
+           { time: "10:00:02", type: "Normal", conf: "98%" },
+           { time: "10:00:03", type: "Anomaly", conf: "92%" }, // Anomaly
+           { time: "10:00:04", type: "Normal", conf: "97%" },
+           { time: "10:00:05", type: "Anomaly", conf: "88%" }, // Anomaly
+        ]
+      });
+    }, 1500);
+  };
+
   return (
     <AppLayout title="AI Models">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
         
         {/* Left: Model List */}
         <div className="lg:col-span-2 space-y-6">
-          <Card>
+          <Card className="h-full">
             <CardHeader>
               <CardTitle>Available Models</CardTitle>
             </CardHeader>
@@ -36,10 +75,14 @@ export default function ModelsPage() {
                 </TableHeader>
                 <TableBody>
                   {models.map((model) => (
-                    <TableRow key={model.id}>
-                      <TableCell className="font-medium">
+                    <TableRow 
+                      key={model.id} 
+                      className={selectedModelId === model.id ? "bg-muted/50" : ""}
+                      onClick={() => setSelectedModelId(model.id)}
+                    >
+                      <TableCell className="font-medium cursor-pointer">
                         <div className="flex items-center gap-2">
-                          <BrainCircuit className="w-4 h-4 text-primary" />
+                          <BrainCircuit className={`w-4 h-4 ${selectedModelId === model.id ? "text-primary" : "text-muted-foreground"}`} />
                           {model.name}
                         </div>
                       </TableCell>
@@ -51,101 +94,173 @@ export default function ModelsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">Select</Button>
+                        <Button 
+                          variant={selectedModelId === model.id ? "default" : "ghost"} 
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedModelId(model.id);
+                          }}
+                        >
+                          {selectedModelId === model.id ? "Selected" : "Select"}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
-          
-          {/* Confusion Matrix Visual (Mock) */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Metrics (Last Run)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-8">
-                <div className="aspect-square bg-accent/20 rounded-lg flex items-center justify-center border border-dashed">
-                  <div className="text-center space-y-2">
-                    <div className="text-4xl font-mono font-bold text-primary">0.98</div>
-                    <div className="text-sm text-muted-foreground">F1 Score</div>
-                  </div>
+              
+              {!selectedModelId && (
+                <div className="p-8 text-center text-muted-foreground text-sm">
+                  Please select a model from the list to enable the Test Bench.
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-center text-sm">
-                  <div className="bg-primary/10 p-4 rounded flex flex-col justify-center">
-                    <span className="text-2xl font-bold">420</span>
-                    <span className="text-xs text-muted-foreground">True Positive</span>
-                  </div>
-                  <div className="bg-muted p-4 rounded flex flex-col justify-center">
-                    <span className="text-2xl font-bold">12</span>
-                    <span className="text-xs text-muted-foreground">False Positive</span>
-                  </div>
-                  <div className="bg-muted p-4 rounded flex flex-col justify-center">
-                    <span className="text-2xl font-bold">8</span>
-                    <span className="text-xs text-muted-foreground">False Negative</span>
-                  </div>
-                  <div className="bg-primary/10 p-4 rounded flex flex-col justify-center">
-                    <span className="text-2xl font-bold">1.2k</span>
-                    <span className="text-xs text-muted-foreground">True Negative</span>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Right: Test Bench */}
         <div className="space-y-6">
-          <Card className="h-full flex flex-col">
-            <CardHeader>
-              <CardTitle>Test Bench</CardTitle>
+          <Card className={`h-full flex flex-col transition-opacity duration-300 ${!selectedModelId ? "opacity-50 pointer-events-none grayscale" : ""}`}>
+            <CardHeader className="bg-muted/20 border-b pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" />
+                  Test Bench
+                </CardTitle>
+                {selectedModel && (
+                  <Badge variant="outline" className="text-xs font-normal bg-background">
+                    {selectedModel.name}
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4 flex-1">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select Sensor Data</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select sensor source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="s1">Robot Arm K-200 (Hist)</SelectItem>
-                    <SelectItem value="s2">Conveyor Belt M-4 (Live)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Time Range</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Last 1 Hour" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1h">Last 1 Hour</SelectItem>
-                    <SelectItem value="24h">Last 24 Hours</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            
+            <CardContent className="space-y-6 flex-1 pt-6 overflow-y-auto">
+              {/* Inputs */}
+              <div className="grid gap-4 p-4 border rounded-lg bg-muted/10">
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase text-muted-foreground">Select Sensor Data</label>
+                  <Select defaultValue="s1">
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Select sensor source" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="s1">Robot Arm K-200 (Historical Data)</SelectItem>
+                      <SelectItem value="s2">Conveyor Belt M-4 (Live Stream)</SelectItem>
+                      <SelectItem value="s3">Welding Unit C (Sample Set)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase text-muted-foreground">Time Range</label>
+                  <Select defaultValue="1h">
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Last 1 Hour" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1h">Last 1 Hour</SelectItem>
+                      <SelectItem value="6h">Last 6 Hours</SelectItem>
+                      <SelectItem value="24h">Last 24 Hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="pt-4">
-                <Button className="w-full" size="lg">
-                  <Play className="w-4 h-4 mr-2" /> Run Model Test
+                <Button 
+                  className="w-full mt-2" 
+                  size="lg" 
+                  onClick={handleRunModel}
+                  disabled={isRunning || !selectedModelId}
+                >
+                  {isRunning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Running Inference...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2 fill-current" /> Run Model Test
+                    </>
+                  )}
                 </Button>
               </div>
 
-              <div className="pt-8 border-t mt-8">
-                 <h4 className="text-sm font-medium mb-2">Last Result</h4>
-                 <div className="bg-accent/50 p-3 rounded-md text-sm font-mono">
-                    Test ID: #T-8829<br/>
-                    Status: Completed<br/>
-                    Anomalies Found: 3
-                 </div>
-                 <Button variant="outline" className="w-full mt-2">
-                   <Download className="w-4 h-4 mr-2" /> Download Report
-                 </Button>
-              </div>
+              {/* Results Area */}
+              {lastResult ? (
+                <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between">
+                     <h4 className="text-sm font-semibold flex items-center gap-2">
+                       <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                       Last Result
+                     </h4>
+                     <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                       {lastResult.status}
+                     </Badge>
+                  </div>
+
+                  {/* Key Metrics */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 bg-primary/5 rounded border text-center">
+                      <div className="text-2xl font-bold text-primary">{lastResult.accuracy}</div>
+                      <div className="text-[10px] uppercase text-muted-foreground font-medium">Accuracy</div>
+                    </div>
+                    <div className="p-3 bg-primary/5 rounded border text-center">
+                      <div className="text-2xl font-bold text-primary">{lastResult.f1Score}</div>
+                      <div className="text-[10px] uppercase text-muted-foreground font-medium">F1 Score</div>
+                    </div>
+                  </div>
+
+                  {/* Confusion Matrix Mini */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-muted-foreground">Confusion Matrix</h5>
+                    <div className="grid grid-cols-2 gap-1 text-center text-xs">
+                      <div className="bg-emerald-100/50 p-2 rounded text-emerald-900">
+                        <div className="font-bold text-lg">{lastResult.confusionMatrix.tp}</div>
+                        <div className="text-[10px] opacity-70">True Pos</div>
+                      </div>
+                      <div className="bg-red-100/50 p-2 rounded text-red-900">
+                        <div className="font-bold text-lg">{lastResult.confusionMatrix.fp}</div>
+                        <div className="text-[10px] opacity-70">False Pos</div>
+                      </div>
+                      <div className="bg-red-100/50 p-2 rounded text-red-900">
+                        <div className="font-bold text-lg">{lastResult.confusionMatrix.fn}</div>
+                        <div className="text-[10px] opacity-70">False Neg</div>
+                      </div>
+                      <div className="bg-emerald-100/50 p-2 rounded text-emerald-900">
+                        <div className="font-bold text-lg">{lastResult.confusionMatrix.tn}</div>
+                        <div className="text-[10px] opacity-70">True Neg</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sample Log */}
+                  <div className="space-y-2">
+                    <h5 className="text-xs font-medium text-muted-foreground">Recent Inference Log</h5>
+                    <div className="text-xs space-y-1 border rounded p-2 bg-muted/20 max-h-[120px] overflow-y-auto font-mono">
+                      {lastResult.predictions.map((p: any, i: number) => (
+                        <div key={i} className="flex justify-between items-center border-b border-dashed last:border-0 pb-1 last:pb-0">
+                          <span className="text-muted-foreground">{p.time}</span>
+                          <span className={p.type === "Anomaly" ? "text-destructive font-bold" : "text-emerald-600"}>
+                            {p.type}
+                          </span>
+                          <span className="opacity-70">{p.conf}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button variant="outline" className="w-full text-xs h-8">
+                    <Download className="w-3 h-3 mr-2" /> Download Full Report
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg m-4 p-8 bg-muted/5 min-h-[200px]">
+                  <BarChart3 className="w-10 h-10 mb-3 opacity-20" />
+                  <p className="text-sm text-center max-w-[200px]">
+                    Run a model test to view detailed performance metrics and results here.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
