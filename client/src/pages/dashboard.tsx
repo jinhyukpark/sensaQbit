@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, AlertTriangle, CheckCircle2, Clock, Server } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const kpiData = [
@@ -23,6 +23,14 @@ const faultData = [
   { name: "Pressure Drop", count: 5 },
   { name: "Sensor Drift", count: 3 },
   { name: "Comm Error", count: 2 },
+];
+
+const processSteps = [
+  { name: "Input Feeder", status: "normal", metric: "120 units/min", efficiency: 99, icon: Zap },
+  { name: "Etching", status: "normal", metric: "45°C Avg", efficiency: 98, icon: Waves },
+  { name: "Washing", status: "warning", metric: "Pressure Low", efficiency: 82, icon: Gauge, issue: "Check Pump" },
+  { name: "Assembly", status: "normal", metric: "0.2s Cycle", efficiency: 99, icon: Activity },
+  { name: "Packaging", status: "normal", metric: "Queue: 45", efficiency: 100, icon: Server },
 ];
 
 export default function Dashboard() {
@@ -51,24 +59,66 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Process Overview Panel */}
-        <Card className="shadow-sm border-border/60">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Process Flow Status</CardTitle>
+        {/* Process Overview Panel - Enhanced */}
+        <Card className="shadow-sm border-border/60 overflow-hidden">
+          <CardHeader className="pb-4 border-b bg-muted/20">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Real-time Process Insights</CardTitle>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Normal</span>
+                 <span className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-amber-500"></div> Warning</span>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="relative h-24 flex items-center justify-between px-10">
-              {/* Simple Process Flow Visualization */}
-              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -z-10 transform -translate-y-1/2"></div>
+          <CardContent className="p-6 overflow-x-auto">
+            <div className="min-w-[800px] flex items-center justify-between relative">
               
-              {["Input Feeder", "Etching", "Washing", "Assembly", "Packaging"].map((step, i) => (
-                <div key={step} className="flex flex-col items-center gap-2 bg-background px-2">
-                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${i === 2 ? 'border-amber-500 bg-amber-50 text-amber-600' : 'border-emerald-500 bg-emerald-50 text-emerald-600'}`}>
-                    {i === 2 ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+              {/* Connecting Line */}
+              <div className="absolute top-1/2 left-0 w-full h-[2px] bg-border -z-10 transform -translate-y-1/2 px-10"></div>
+
+              {processSteps.map((step, i) => {
+                const isWarning = step.status === "warning";
+                return (
+                  <div key={step.name} className="relative group">
+                     {/* Connector Arrow (except last) */}
+                     {i < processSteps.length - 1 && (
+                       <div className="absolute -right-12 top-1/2 transform -translate-y-1/2 text-muted-foreground/30">
+                         <ArrowRight className="w-6 h-6" />
+                       </div>
+                     )}
+
+                     <div className={`
+                        relative w-40 p-3 rounded-lg border-2 bg-background transition-all duration-300 hover:shadow-md hover:-translate-y-1
+                        ${isWarning ? 'border-amber-500/50 bg-amber-50/50' : 'border-border hover:border-primary/50'}
+                     `}>
+                        <div className="flex items-center justify-between mb-2">
+                           <span className={`text-xs font-bold uppercase ${isWarning ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                             {step.name}
+                           </span>
+                           {isWarning ? 
+                             <AlertTriangle className="w-4 h-4 text-amber-500 animate-pulse" /> : 
+                             <step.icon className="w-4 h-4 text-emerald-500" />
+                           }
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <div className="flex items-end gap-1">
+                             <span className="text-lg font-bold leading-none">{step.efficiency}%</span>
+                             <span className="text-[10px] text-muted-foreground mb-0.5">Eff.</span>
+                          </div>
+                          <div className={`text-xs font-medium ${isWarning ? 'text-amber-600' : 'text-primary'}`}>
+                             {step.metric}
+                          </div>
+                          {step.issue && (
+                            <div className="text-[10px] text-red-500 font-bold mt-1 bg-red-50 px-1 py-0.5 rounded inline-block">
+                              ! {step.issue}
+                            </div>
+                          )}
+                        </div>
+                     </div>
                   </div>
-                  <span className="text-xs font-medium">{step}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
