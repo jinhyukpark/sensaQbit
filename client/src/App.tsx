@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
 import LandingPage from "@/pages/landing";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
@@ -12,7 +13,7 @@ import NotFound from "@/pages/not-found";
 import { Toaster } from "@/components/ui/toaster";
 import { FilterProvider } from "@/lib/filter-context";
 
-function Router() {
+function AppRouter() {
   return (
     <Switch>
       <Route path="/" component={LandingPage} />
@@ -33,10 +34,14 @@ function Router() {
 }
 
 function App() {
+  const [location] = useHashLocation();
+  
   return (
     <FilterProvider>
-      <Router />
-      <Toaster />
+      <WouterRouter hook={useHashLocation}>
+        <AppRouter />
+        <Toaster />
+      </WouterRouter>
     </FilterProvider>
   );
 }
