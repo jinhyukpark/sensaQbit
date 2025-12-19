@@ -101,25 +101,31 @@ export function Sidebar() {
       <div className="p-4 border-t border-sidebar-border">
         {!collapsed ? (
           <Link href="/fdc/settings">
-             <div className="bg-sidebar-accent/50 rounded-lg p-3 cursor-pointer hover:bg-sidebar-accent transition-colors group border border-transparent hover:border-sidebar-border">
-                <div className="flex items-center gap-2 mb-2">
-                   <div className="p-1.5 rounded-md bg-primary/10 text-primary shrink-0">
-                     <CreditCard className="w-3.5 h-3.5" />
+             <div className="bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/20 rounded-lg p-3 cursor-pointer hover:from-primary/30 hover:to-primary/20 transition-all group shadow-sm">
+                <div className="flex items-center gap-3 mb-2">
+                   <div className="p-2 rounded-md bg-primary text-primary-foreground shrink-0 shadow-sm">
+                     <CreditCard className="w-4 h-4" />
                    </div>
                    <div className="overflow-hidden">
-                     <div className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">Enterprise Pro</div>
-                     <div className="text-[10px] text-muted-foreground truncate">License Active</div>
+                     <div className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">Enterprise Pro</div>
+                     <div className="text-[10px] text-muted-foreground truncate flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        License Active
+                     </div>
                    </div>
                 </div>
-                <div className="text-[10px] text-primary font-medium text-right">
-                   Change Plan →
+                <div className="mt-2 pt-2 border-t border-primary/10 flex justify-between items-center">
+                   <span className="text-[10px] text-muted-foreground">Valid until Oct 2024</span>
+                   <span className="text-[10px] text-primary font-bold group-hover:underline transition-all flex items-center">
+                      Upgrade <ArrowLeft className="w-2.5 h-2.5 ml-1 rotate-180" />
+                   </span>
                 </div>
              </div>
           </Link>
         ) : (
           <Link href="/fdc/settings">
             <div className="flex justify-center cursor-pointer mb-2" title="Enterprise Pro License">
-              <div className="p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+              <div className="p-2 rounded-md bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors">
                 <CreditCard className="w-4 h-4" />
               </div>
             </div>
