@@ -486,72 +486,74 @@ export default function HistoryPage() {
                   {/* 3. Detailed Data Table */}
                   <div className="space-y-4">
                     {/* Toolbar */}
-                    <div className="flex items-center gap-2">
-                      <div className="relative w-64">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Search alarms..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="pl-9 h-9 text-sm"
-                        />
-                      </div>
-                      
-                      {/* Filter Popover */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-9 border-dashed">
-                            <ListFilter className="mr-2 h-4 w-4" />
-                            Filters
-                            {filterStatus !== "all" && (
-                              <span className="ml-1 rounded-full bg-primary/10 w-2 h-2" />
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[200px] p-0" align="end">
-                          <div className="p-2">
-                            <div className="space-y-2">
-                              <h4 className="font-medium text-xs leading-none text-muted-foreground mb-2 px-2 pt-1">Status</h4>
-                              <Select value={filterStatus} onValueChange={(val: "all" | "fault") => setFilterStatus(val)}>
-                                <SelectTrigger className="h-8 text-xs">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="all">View All</SelectItem>
-                                  <SelectItem value="fault">Fault Only</SelectItem>
-                                </SelectContent>
-                              </Select>
+                    <div className="flex items-center gap-2 justify-between">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="relative w-64">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search alarms..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 h-9 text-sm"
+                          />
+                        </div>
+                        
+                        {/* Filter Popover */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-9 border-dashed">
+                              <ListFilter className="mr-2 h-4 w-4" />
+                              Filters
+                              {filterStatus !== "all" && (
+                                <span className="ml-1 rounded-full bg-primary/10 w-2 h-2" />
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[200px] p-0" align="end">
+                            <div className="p-2">
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-xs leading-none text-muted-foreground mb-2 px-2 pt-1">Status</h4>
+                                <Select value={filterStatus} onValueChange={(val: "all" | "fault") => setFilterStatus(val)}>
+                                  <SelectTrigger className="h-8 text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">View All</SelectItem>
+                                    <SelectItem value="fault">Fault Only</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                          </PopoverContent>
+                        </Popover>
 
-                      {/* Columns Dropdown */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-9 border-dashed">
-                            <Columns className="mr-2 h-4 w-4" />
-                            Columns
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[150px]">
-                          <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {allColumns.map((col) => (
-                            <DropdownMenuCheckboxItem
-                              key={col.id}
-                              checked={visibleColumns[col.id]}
-                              onCheckedChange={(checked) => 
-                                setVisibleColumns(prev => ({ ...prev, [col.id]: checked }))
-                              }
-                            >
-                              {col.label}
-                            </DropdownMenuCheckboxItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        {/* Columns Dropdown */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-9 border-dashed">
+                              <Columns className="mr-2 h-4 w-4" />
+                              Columns
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-[150px]">
+                            <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {allColumns.map((col) => (
+                              <DropdownMenuCheckboxItem
+                                key={col.id}
+                                checked={visibleColumns[col.id]}
+                                onCheckedChange={(checked) => 
+                                  setVisibleColumns(prev => ({ ...prev, [col.id]: checked }))
+                                }
+                              >
+                                {col.label}
+                              </DropdownMenuCheckboxItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
 
-                      {/* Sort Dropdown */}
+                      {/* Sort Dropdown - Moved to the right */}
                       <Select value={sortOrder} onValueChange={setSortOrder}>
                         <SelectTrigger className="w-[160px] h-9 border-dashed">
                           <div className="flex items-center gap-2">
