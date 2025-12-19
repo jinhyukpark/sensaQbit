@@ -424,15 +424,17 @@ export default function HistoryPage() {
           {/* Right Content: Analytics */}
           <ResizablePanel defaultSize={isDetailsOpen ? 60 : 80} className="relative">
             {!isDetailsOpen && (
-              <div className="absolute right-0 top-6 z-20">
+              <div className="absolute right-6 top-6 z-20 animate-in fade-in slide-in-from-right-8 duration-500">
                  <Button 
-                   variant="secondary" 
+                   variant="outline" 
                    size="sm" 
-                   className="rounded-l-md rounded-r-none border-l border-y shadow-sm h-10 pl-3 pr-4 gap-2 bg-background hover:bg-accent"
+                   className="rounded-full shadow-lg border-primary/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-10 pl-2 pr-4 gap-2 hover:bg-primary/5 hover:border-primary/40 transition-all duration-300 group"
                    onClick={() => setIsDetailsOpen(true)}
                  >
-                   <PanelRightOpen className="h-4 w-4 text-muted-foreground" />
-                   <span className="text-xs font-medium text-muted-foreground">View Details</span>
+                   <div className="bg-primary/10 p-1.5 rounded-full group-hover:bg-primary/20 transition-colors">
+                     <PanelRightOpen className="h-3.5 w-3.5 text-primary" />
+                   </div>
+                   <span className="text-xs font-medium text-foreground/80 group-hover:text-primary transition-colors">View Details</span>
                  </Button>
               </div>
             )}
