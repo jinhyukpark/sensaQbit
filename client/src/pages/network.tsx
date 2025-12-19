@@ -254,7 +254,7 @@ export default function NetworkPage() {
   };
 
   return (
-    <AppLayout title="Network Graph">
+    <AppLayout title="Network Graph" hideFilters={true}>
       <div className="relative h-full w-full overflow-hidden bg-slate-50 flex">
         
         {/* Left Area: Visualization */}

@@ -69,7 +69,7 @@ export default function ReportsPage() {
   const selectedReport = reports.find(r => r.id === selectedReportId);
 
   return (
-    <AppLayout title="Reports">
+    <AppLayout title="Reports" hideFilters={true}>
       <div className="flex h-[calc(100vh-100px)] gap-6">
         
         {/* Left Panel: Report List */}

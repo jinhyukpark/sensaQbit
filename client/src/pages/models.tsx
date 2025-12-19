@@ -89,7 +89,7 @@ export default function ModelsPage() {
   };
 
   return (
-    <AppLayout title="AI Models">
+    <AppLayout title="AI Models" hideFilters={true}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
         
         {/* Left: Model List */}

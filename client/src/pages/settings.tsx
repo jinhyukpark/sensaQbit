@@ -14,7 +14,7 @@ import { User, CreditCard, Shield, Users, Database, Key, Plus, Check, Server } f
 
 export default function SettingsPage() {
   return (
-    <AppLayout title="Settings">
+    <AppLayout title="Settings" hideFilters={true}>
       <div className="max-w-5xl mx-auto pb-10">
         <Tabs defaultValue="account" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 h-12">
