@@ -70,6 +70,42 @@ interface Alarm {
   color: string;
 }
 
+const sensorCategories = [
+  { id: "temp", label: "Temperature" },
+  { id: "pressure", label: "Pressure" },
+  { id: "flow", label: "Flow Rate" },
+  { id: "power", label: "Power" },
+];
+
+const faultySensorsData: Record<string, { name: string; count: number }[]> = {
+  temp: [
+    { name: "Temp Sensor #4", count: 18 },
+    { name: "Temp Sensor #2", count: 12 },
+    { name: "Temp Sensor #8", count: 7 },
+    { name: "Temp Sensor #1", count: 4 },
+    { name: "Temp Sensor #5", count: 2 },
+  ],
+  pressure: [
+    { name: "Pressure Gauge A", count: 15 },
+    { name: "Pressure Gauge C", count: 9 },
+    { name: "Pressure Gauge B", count: 6 },
+    { name: "Vacuum Sensor", count: 3 },
+  ],
+  flow: [
+    { name: "Flow Meter #2", count: 22 },
+    { name: "Flow Meter #1", count: 8 },
+    { name: "Main Valve Flow", count: 5 },
+    { name: "Coolant Flow", count: 4 },
+  ],
+  power: [
+    { name: "Main Rectifier", count: 11 },
+    { name: "Backup PSU", count: 6 },
+    { name: "Surge Protector", count: 4 },
+    { name: "Distribution Unit", count: 2 },
+  ],
+  other: []
+};
+
 const recentAlarmsAll: Alarm[] = [
   { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800" },
   { time: "6:47:50 AM", sensor: "Temp Sensor #4", type: "Spike", category: 'data', color: "bg-blue-100 text-blue-800" },
@@ -100,6 +136,7 @@ const processSteps = [
 export default function Dashboard() {
   const { factory, process, equipment } = useFilter();
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [activeFaultCategory, setActiveFaultCategory] = useState<string>("temp");
   
   // Resizable Columns State
   const [colWidths, setColWidths] = useState<number[]>([150, 300, 300, 200]);
@@ -151,6 +188,11 @@ export default function Dashboard() {
   const sensorData = isFiltered ? sensorDataFiltered : sensorDataAll;
   const faultData = isFiltered ? faultDataFiltered : faultDataAll;
   const recentAlarmsRaw = isFiltered ? recentAlarmsFiltered : recentAlarmsAll;
+
+  // Fault Data based on category
+  const currentFaultData = useMemo(() => {
+    return faultySensorsData[activeFaultCategory] || [];
+  }, [activeFaultCategory]);
 
   const recentAlarms = useMemo(() => {
     if (activeFilter === "all") return recentAlarmsRaw;
@@ -296,19 +338,51 @@ export default function Dashboard() {
 
           {/* Fault Distribution */}
           <Card className="shadow-sm border-border/60">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Fault Type Frequency</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Top Faulty Sensors</CardTitle>
             </CardHeader>
-            <CardContent className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={faultData} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={100} stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{fill: 'transparent'}} contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }} />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
-                </BarChart>
-              </ResponsiveContainer>
+            <CardContent>
+              <div className="mb-4">
+                <ToggleGroup 
+                  type="single" 
+                  value={activeFaultCategory} 
+                  onValueChange={(val) => val && setActiveFaultCategory(val)}
+                  className="justify-start flex-wrap gap-2"
+                >
+                  {sensorCategories.map((cat) => (
+                    <ToggleGroupItem 
+                      key={cat.id} 
+                      value={cat.id} 
+                      size="sm" 
+                      className="text-[10px] h-6 px-2 rounded-full border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    >
+                      {cat.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={currentFaultData} layout="vertical" margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="hsl(var(--border))" />
+                    <XAxis type="number" hide />
+                    <YAxis 
+                      dataKey="name" 
+                      type="category" 
+                      width={110} 
+                      stroke="hsl(var(--muted-foreground))" 
+                      fontSize={11} 
+                      tickLine={false} 
+                      axisLine={false} 
+                    />
+                    <Tooltip 
+                      cursor={{fill: 'transparent'}} 
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }} 
+                    />
+                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
