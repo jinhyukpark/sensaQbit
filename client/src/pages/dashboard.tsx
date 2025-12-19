@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves, GripVertical } from "lucide-react";
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -395,7 +395,11 @@ export default function Dashboard() {
                       cursor={{fill: 'transparent'}} 
                       contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }} 
                     />
-                    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
+                    <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={20}>
+                      {currentFaultData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.count > 15 ? "#ef4444" : entry.count > 10 ? "#f97316" : "#f59e0b"} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
