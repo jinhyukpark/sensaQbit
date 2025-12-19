@@ -10,7 +10,8 @@ import {
   Activity,
   ChevronLeft,
   Menu,
-  ArrowLeft
+  ArrowLeft,
+  CreditCard
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -96,9 +97,38 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer - removed toggle as it is now at the top */}
-      <div className="p-2 border-t border-sidebar-border text-xs text-center text-muted-foreground">
-        {!collapsed && <span>v1.0.2</span>}
+      {/* Footer - License Info */}
+      <div className="p-4 border-t border-sidebar-border">
+        {!collapsed ? (
+          <Link href="/fdc/settings">
+             <div className="bg-sidebar-accent/50 rounded-lg p-3 cursor-pointer hover:bg-sidebar-accent transition-colors group border border-transparent hover:border-sidebar-border">
+                <div className="flex items-center gap-2 mb-2">
+                   <div className="p-1.5 rounded-md bg-primary/10 text-primary shrink-0">
+                     <CreditCard className="w-3.5 h-3.5" />
+                   </div>
+                   <div className="overflow-hidden">
+                     <div className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">Enterprise Pro</div>
+                     <div className="text-[10px] text-muted-foreground truncate">License Active</div>
+                   </div>
+                </div>
+                <div className="text-[10px] text-primary font-medium text-right">
+                   Change Plan →
+                </div>
+             </div>
+          </Link>
+        ) : (
+          <Link href="/fdc/settings">
+            <div className="flex justify-center cursor-pointer mb-2" title="Enterprise Pro License">
+              <div className="p-2 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
+                <CreditCard className="w-4 h-4" />
+              </div>
+            </div>
+          </Link>
+        )}
+        
+        <div className="mt-2 text-[10px] text-center text-muted-foreground opacity-50">
+          {!collapsed && <span>v1.0.2</span>}
+        </div>
       </div>
     </div>
   );
