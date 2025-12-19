@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves, GripVertical } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves, GripVertical, Search, ListFilter, ArrowUpDown } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useFilter } from "@/lib/filter-context";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -145,6 +154,8 @@ export default function Dashboard() {
   const { factory, process, equipment } = useFilter();
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [activeFaultCategory, setActiveFaultCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   
   // Resizable Columns State
   const [colWidths, setColWidths] = useState<number[]>([150, 300, 300, 200]);
@@ -203,9 +214,33 @@ export default function Dashboard() {
   }, [activeFaultCategory]);
 
   const recentAlarms = useMemo(() => {
-    if (activeFilter === "all") return recentAlarmsRaw;
-    return recentAlarmsRaw.filter(alarm => alarm.category === activeFilter);
-  }, [recentAlarmsRaw, activeFilter]);
+    let filtered = recentAlarmsRaw;
+    
+    // Category Filter
+    if (activeFilter !== "all") {
+      filtered = filtered.filter(alarm => alarm.category === activeFilter);
+    }
+    
+    // Search Filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(alarm => 
+        alarm.sensor.toLowerCase().includes(q) || 
+        alarm.type.toLowerCase().includes(q)
+      );
+    }
+
+    // Sort
+    return [...filtered].sort((a, b) => {
+      // Assuming time format "6:48:50 AM" - simple string compare works for same day
+      // For robust sorting we'd parse dates, but this is mockup data
+      if (sortOrder === "newest") return b.time.localeCompare(a.time);
+      if (sortOrder === "oldest") return a.time.localeCompare(b.time);
+      if (sortOrder === "sensor") return a.sensor.localeCompare(b.sensor);
+      if (sortOrder === "type") return a.type.localeCompare(b.type);
+      return 0;
+    });
+  }, [recentAlarmsRaw, activeFilter, searchQuery, sortOrder]);
 
   const filteredTitle = useMemo(() => {
     if (!isFiltered) return "Overview (All Factories)";
@@ -418,27 +453,49 @@ export default function Dashboard() {
               </div>
             </div>
             
-            {/* Filter Toggles */}
-            <div className="w-full flex justify-start">
-              <ToggleGroup 
-                type="single" 
-                value={activeFilter} 
-                onValueChange={(val) => val && setActiveFilter(val)}
-                className="justify-start"
-              >
-                <ToggleGroupItem value="all" size="sm" className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground">
-                  All Parameters
-                </ToggleGroupItem>
-                <ToggleGroupItem value="data" size="sm" className="text-xs px-3 data-[state=on]:bg-blue-100 data-[state=on]:text-blue-800 data-[state=on]:border-blue-200">
-                  Data Patterns
-                </ToggleGroupItem>
-                <ToggleGroupItem value="physical" size="sm" className="text-xs px-3 data-[state=on]:bg-amber-100 data-[state=on]:text-amber-800 data-[state=on]:border-amber-200">
-                  Physical Faults
-                </ToggleGroupItem>
-                <ToggleGroupItem value="cause" size="sm" className="text-xs px-3 data-[state=on]:bg-red-100 data-[state=on]:text-red-800 data-[state=on]:border-red-200">
-                  Root Cause
-                </ToggleGroupItem>
-              </ToggleGroup>
+            {/* Filter and Ordering Toolbar */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+              <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    type="search" 
+                    placeholder="Search alarms..." 
+                    className="pl-8 h-9 text-xs"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <Select value={activeFilter} onValueChange={setActiveFilter}>
+                  <SelectTrigger className="w-[140px] h-9 text-xs">
+                    <ListFilter className="w-3.5 h-3.5 mr-2" />
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="data">Data Patterns</SelectItem>
+                    <SelectItem value="physical">Physical Faults</SelectItem>
+                    <SelectItem value="cause">Root Cause</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:inline-block">Sort by:</span>
+                <Select value={sortOrder} onValueChange={setSortOrder}>
+                  <SelectTrigger className="w-[140px] h-9 text-xs">
+                    <ArrowUpDown className="w-3.5 h-3.5 mr-2" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Time (Newest)</SelectItem>
+                    <SelectItem value="oldest">Time (Oldest)</SelectItem>
+                    <SelectItem value="sensor">Sensor Name</SelectItem>
+                    <SelectItem value="type">Fault Type</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="p-0 overflow-auto">
