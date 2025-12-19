@@ -1,9 +1,10 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves, GripVertical, Search, ListFilter, ArrowUpDown } from "lucide-react";
+import { Activity, AlertTriangle, CheckCircle2, Clock, Server, ArrowRight, Gauge, Zap, Waves, GripVertical, Search, ListFilter, ArrowUpDown, Columns } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -21,6 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useFilter } from "@/lib/filter-context";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -77,6 +86,10 @@ interface Alarm {
   type: string;
   category: 'data' | 'physical' | 'cause';
   color: string;
+  factory: string;
+  product: string;
+  process: string;
+  equipment: string;
 }
 
 const sensorCategories = [
@@ -124,22 +137,22 @@ const faultySensorsData: Record<string, { name: string; count: number }[]> = {
 };
 
 const recentAlarmsAll: Alarm[] = [
-  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800" },
-  { time: "6:47:50 AM", sensor: "Temp Sensor #4", type: "Spike", category: 'data', color: "bg-blue-100 text-blue-800" },
-  { time: "6:46:50 AM", sensor: "Pressure Gauge A", type: "LowSignal", category: 'data', color: "bg-blue-100 text-blue-800" },
-  { time: "6:45:50 AM", sensor: "Vibration Sensor Y-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800" },
-  { time: "6:44:50 AM", sensor: "Cooling Fan RPM", type: "Equipment Failure", category: 'cause', color: "bg-red-100 text-red-800" },
-  { time: "6:43:50 AM", sensor: "Flow Rate Meter", type: "Dimensional Fault", category: 'physical', color: "bg-amber-100 text-amber-800" },
-  { time: "6:42:50 AM", sensor: "Vibration Sensor Z-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800" },
-  { time: "6:41:50 AM", sensor: "Temp Sensor #2", type: "Spike", category: 'data', color: "bg-blue-100 text-blue-800" },
-  { time: "6:40:50 AM", sensor: "Surface Scanner", type: "Scratch Detected", category: 'physical', color: "bg-amber-100 text-amber-800" },
-  { time: "6:39:50 AM", sensor: "Gas Flow Controller", type: "Process Recipe Error", category: 'cause', color: "bg-red-100 text-red-800" },
+  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Etching", equipment: "Etcher-A" },
+  { time: "6:47:50 AM", sensor: "Temp Sensor #4", type: "Spike", category: 'data', color: "bg-blue-100 text-blue-800", factory: "Factory Beta", product: "Wafer-300mm", process: "Deposition", equipment: "Depo-Chamber-1" },
+  { time: "6:46:50 AM", sensor: "Pressure Gauge A", type: "LowSignal", category: 'data', color: "bg-blue-100 text-blue-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Etching", equipment: "Pump-Main" },
+  { time: "6:45:50 AM", sensor: "Vibration Sensor Y-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Cleaning", equipment: "Washer-2" },
+  { time: "6:44:50 AM", sensor: "Cooling Fan RPM", type: "Equipment Failure", category: 'cause', color: "bg-red-100 text-red-800", factory: "Factory Beta", product: "Wafer-300mm", process: "Lithography", equipment: "Scanner-X" },
+  { time: "6:43:50 AM", sensor: "Flow Rate Meter", type: "Dimensional Fault", category: 'physical', color: "bg-amber-100 text-amber-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Etching", equipment: "Flow-Controller-2" },
+  { time: "6:42:50 AM", sensor: "Vibration Sensor Z-Axis", type: "Drift", category: 'data', color: "bg-blue-100 text-blue-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Etching", equipment: "Etcher-A" },
+  { time: "6:41:50 AM", sensor: "Temp Sensor #2", type: "Spike", category: 'data', color: "bg-blue-100 text-blue-800", factory: "Factory Beta", product: "Wafer-300mm", process: "Deposition", equipment: "Depo-Chamber-1" },
+  { time: "6:40:50 AM", sensor: "Surface Scanner", type: "Scratch Detected", category: 'physical', color: "bg-amber-100 text-amber-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Inspection", equipment: "AOI-System-1" },
+  { time: "6:39:50 AM", sensor: "Gas Flow Controller", type: "Process Recipe Error", category: 'cause', color: "bg-red-100 text-red-800", factory: "Factory Beta", product: "Wafer-300mm", process: "Deposition", equipment: "MFC-Cluster" },
 ];
 
 const recentAlarmsFiltered: Alarm[] = [
-  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical Spike", category: 'data', color: "bg-red-100 text-red-800" },
-  { time: "6:45:50 AM", sensor: "Vibration Sensor X-Axis", type: "Equipment Malfunction", category: 'cause', color: "bg-red-100 text-red-800" },
-  { time: "6:42:50 AM", sensor: "Vibration Sensor X-Axis", type: "Surface Crack", category: 'physical', color: "bg-amber-100 text-amber-800" },
+  { time: "6:48:50 AM", sensor: "Vibration Sensor X-Axis", type: "Critical Spike", category: 'data', color: "bg-red-100 text-red-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Etching", equipment: "Etcher-A" },
+  { time: "6:45:50 AM", sensor: "Vibration Sensor X-Axis", type: "Equipment Malfunction", category: 'cause', color: "bg-red-100 text-red-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Etching", equipment: "Etcher-A" },
+  { time: "6:42:50 AM", sensor: "Vibration Sensor X-Axis", type: "Surface Crack", category: 'physical', color: "bg-amber-100 text-amber-800", factory: "Factory Alpha", product: "Wafer-200mm", process: "Etching", equipment: "Etcher-A" },
 ];
 
 const processSteps = [
@@ -157,11 +170,50 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   
+  // Column Visibility State
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    time: true,
+    sensor: true,
+    type: true,
+    category: true,
+    factory: false,
+    product: false,
+    process: false,
+    equipment: false,
+  });
+
   // Resizable Columns State
+  // Default sizes: time, sensor, type, category
+  // We'll manage column widths dynamically based on visible columns
   const [colWidths, setColWidths] = useState<number[]>([150, 300, 300, 200]);
   const isResizing = useRef<number>(-1);
   const startX = useRef<number>(0);
   const startWidth = useRef<number>(0);
+
+  // Update column widths when visibility changes
+  useEffect(() => {
+    // Reset or adjust widths based on visible columns count
+    // This is a simple reset logic, a more complex one would preserve existing widths
+    const baseWidths = [150, 250, 250, 150]; // Base widths for core columns
+    const optionalWidths = Object.values(visibleColumns).slice(4).filter(v => v).map(() => 150);
+    
+    // Only reset if the length doesn't match (simple heuristic to avoid resetting on every render if we were to improve this)
+    // For now, let's just ensure we have enough width entries
+    const visibleCount = Object.values(visibleColumns).filter(v => v).length;
+    if (colWidths.length !== visibleCount) {
+       // Re-calculate widths
+       const newWidths: number[] = [];
+       if (visibleColumns.time) newWidths.push(150);
+       if (visibleColumns.sensor) newWidths.push(250);
+       if (visibleColumns.type) newWidths.push(250);
+       if (visibleColumns.category) newWidths.push(150);
+       if (visibleColumns.factory) newWidths.push(150);
+       if (visibleColumns.product) newWidths.push(150);
+       if (visibleColumns.process) newWidths.push(150);
+       if (visibleColumns.equipment) newWidths.push(150);
+       setColWidths(newWidths);
+    }
+  }, [visibleColumns]);
 
   // Column resize handlers
   useEffect(() => {
@@ -482,6 +534,34 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 text-xs ml-auto">
+                      <Columns className="w-3.5 h-3.5 mr-2" />
+                      Columns
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[150px]">
+                    <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {Object.keys(visibleColumns).map((key) => (
+                      <DropdownMenuCheckboxItem
+                        key={key}
+                        className="capitalize"
+                        checked={visibleColumns[key]}
+                        onCheckedChange={(checked) => {
+                          setVisibleColumns((prev) => ({
+                            ...prev,
+                            [key]: checked,
+                          }));
+                        }}
+                      >
+                        {key}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:inline-block">Sort by:</span>
                 <Select value={sortOrder} onValueChange={setSortOrder}>
                   <SelectTrigger className="w-[140px] h-9 text-xs">
@@ -502,8 +582,8 @@ export default function Dashboard() {
             <div className="min-w-max">
               <div className="grid border-b bg-muted/50 text-xs font-medium text-muted-foreground" style={{ gridTemplateColumns }}>
                 {/* Header with Resizers */}
-                {['Time', 'Sensor', 'Fault Type', 'Category'].map((header, index) => (
-                  <div key={header} className="relative px-4 py-2 border-r border-border/50 flex items-center justify-between group select-none">
+                {Object.keys(visibleColumns).filter(k => visibleColumns[k]).map((header, index) => (
+                  <div key={header} className="relative px-4 py-2 border-r border-border/50 flex items-center justify-between group select-none capitalize">
                     <span className={header === 'Category' ? 'text-left' : ''}>{header}</span>
                     <div 
                       className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors z-10"
@@ -516,20 +596,30 @@ export default function Dashboard() {
                 {recentAlarms.length > 0 ? (
                   recentAlarms.map((alarm, i) => (
                     <div key={i} className="grid hover:bg-muted/50 items-center transition-colors" style={{ gridTemplateColumns }}>
-                      <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">{alarm.time}</div>
-                      <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
-                        <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
-                          {alarm.sensor}
-                        </Badge>
-                      </div>
-                      <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
-                        <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
-                          {alarm.type}
-                        </Badge>
-                      </div>
-                      <div className="px-4 py-3 text-left text-xs text-muted-foreground capitalize h-full flex items-center truncate">
-                        {alarm.category}
-                      </div>
+                      {visibleColumns.time && <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">{alarm.time}</div>}
+                      {visibleColumns.sensor && (
+                        <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
+                          <Badge variant="outline" className="text-xs font-normal bg-slate-100 text-slate-600 border-slate-200">
+                            {alarm.sensor}
+                          </Badge>
+                        </div>
+                      )}
+                      {visibleColumns.type && (
+                        <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
+                          <Badge variant="secondary" className={`text-xs font-normal border-none ${alarm.color}`}>
+                            {alarm.type}
+                          </Badge>
+                        </div>
+                      )}
+                      {visibleColumns.category && (
+                        <div className="px-4 py-3 text-left text-xs text-muted-foreground capitalize h-full flex items-center truncate border-r border-border/50">
+                          {alarm.category}
+                        </div>
+                      )}
+                      {visibleColumns.factory && <div className="px-4 py-3 text-xs text-muted-foreground border-r border-border/50 h-full flex items-center truncate">{alarm.factory}</div>}
+                      {visibleColumns.product && <div className="px-4 py-3 text-xs text-muted-foreground border-r border-border/50 h-full flex items-center truncate">{alarm.product}</div>}
+                      {visibleColumns.process && <div className="px-4 py-3 text-xs text-muted-foreground border-r border-border/50 h-full flex items-center truncate">{alarm.process}</div>}
+                      {visibleColumns.equipment && <div className="px-4 py-3 text-xs text-muted-foreground border-r border-border/50 h-full flex items-center truncate">{alarm.equipment}</div>}
                     </div>
                   ))
                 ) : (
