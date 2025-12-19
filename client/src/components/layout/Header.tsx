@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CalendarIcon, Bell, User, Settings, LogOut, Wifi } from "lucide-react";
-import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { addDays, format } from "date-fns";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useFilter } from "@/lib/filter-context";
@@ -30,7 +31,10 @@ import { Link, useLocation } from "wouter";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function Header({ title }: { title: string }) {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 7),
+  });
   const { factory, setFactory, process, setProcess, equipment, setEquipment } = useFilter();
   const [, setLocation] = useLocation();
 
@@ -100,26 +104,40 @@ export function Header({ title }: { title: string }) {
           </Select>
         </div>
 
-        {/* Date Picker */}
+        {/* Date Range Picker */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
+              id="date"
               variant={"outline"}
               className={cn(
-                "w-[220px] h-8 justify-start text-left font-normal text-xs",
+                "w-[260px] h-8 justify-start text-left font-normal text-xs",
                 !date && "text-muted-foreground"
               )}
             >
               <CalendarIcon className="mr-2 h-3 w-3" />
-              {date ? format(date, "PPP") : <span>Pick a date</span>}
+              {date?.from ? (
+                date.to ? (
+                  <>
+                    {format(date.from, "LLL dd, y")} -{" "}
+                    {format(date.to, "LLL dd, y")}
+                  </>
+                ) : (
+                  format(date.from, "LLL dd, y")
+                )
+              ) : (
+                <span>Pick a date</span>
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="end">
             <Calendar
-              mode="single"
+              initialFocus
+              mode="range"
+              defaultMonth={date?.from}
               selected={date}
               onSelect={setDate}
-              initialFocus
+              numberOfMonths={2}
             />
           </PopoverContent>
         </Popover>
