@@ -71,6 +71,7 @@ interface Alarm {
 }
 
 const sensorCategories = [
+  { id: "all", label: "All" },
   { id: "temp", label: "Temperature" },
   { id: "pressure", label: "Pressure" },
   { id: "flow", label: "Flow Rate" },
@@ -78,6 +79,13 @@ const sensorCategories = [
 ];
 
 const faultySensorsData: Record<string, { name: string; count: number }[]> = {
+  all: [
+    { name: "Flow Meter #2", count: 22 },
+    { name: "Temp Sensor #4", count: 18 },
+    { name: "Pressure Gauge A", count: 15 },
+    { name: "Temp Sensor #2", count: 12 },
+    { name: "Main Rectifier", count: 11 },
+  ],
   temp: [
     { name: "Temp Sensor #4", count: 18 },
     { name: "Temp Sensor #2", count: 12 },
@@ -136,7 +144,7 @@ const processSteps = [
 export default function Dashboard() {
   const { factory, process, equipment } = useFilter();
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [activeFaultCategory, setActiveFaultCategory] = useState<string>("temp");
+  const [activeFaultCategory, setActiveFaultCategory] = useState<string>("all");
   
   // Resizable Columns State
   const [colWidths, setColWidths] = useState<number[]>([150, 300, 300, 200]);
@@ -349,16 +357,24 @@ export default function Dashboard() {
                   onValueChange={(val) => val && setActiveFaultCategory(val)}
                   className="justify-start flex-wrap gap-2"
                 >
-                  {sensorCategories.map((cat) => (
-                    <ToggleGroupItem 
-                      key={cat.id} 
-                      value={cat.id} 
-                      size="sm" 
-                      className="text-[10px] h-6 px-2 rounded-full border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                    >
-                      {cat.label}
-                    </ToggleGroupItem>
-                  ))}
+                  {sensorCategories.map((cat) => {
+                    // Calculate total count for the category
+                    const count = faultySensorsData[cat.id]?.reduce((sum, item) => sum + item.count, 0) || 0;
+                    
+                    return (
+                      <ToggleGroupItem 
+                        key={cat.id} 
+                        value={cat.id} 
+                        size="sm" 
+                        className="text-[10px] h-6 px-3 rounded-full border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground gap-2"
+                      >
+                        {cat.label}
+                        <span className="bg-primary-foreground/20 px-1.5 rounded-full text-[9px] font-semibold opacity-80">
+                          {count}
+                        </span>
+                      </ToggleGroupItem>
+                    );
+                  })}
                 </ToggleGroup>
               </div>
               <div className="h-[250px]">
