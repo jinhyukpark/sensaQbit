@@ -589,7 +589,18 @@ export default function SettingsPage() {
                                  conn.status === 'error' ? <AlertCircle className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
                               </div>
                               <div>
-                                <h3 className="font-medium">{conn.name}</h3>
+                                <h3 className="font-medium flex items-center gap-2">
+                                  {conn.name}
+                                  {conn.status === 'active' && (
+                                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">Active</Badge>
+                                  )}
+                                  {conn.status === 'inactive' && (
+                                    <Badge variant="outline" className="text-muted-foreground">Disabled</Badge>
+                                  )}
+                                  {conn.status === 'error' && (
+                                    <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200">Connection Error</Badge>
+                                  )}
+                                </h3>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground font-mono mt-1">
                                   <span>{conn.ip}:{conn.port}</span>
                                   {conn.status === 'active' && (
