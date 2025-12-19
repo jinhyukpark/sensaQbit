@@ -36,13 +36,23 @@ export function Sidebar() {
       )}
     >
       {/* Logo Area */}
-      <div className="h-14 flex items-center px-4 border-b border-sidebar-border justify-between">
-        <div className={cn("flex items-center gap-2 font-bold tracking-tight text-lg overflow-hidden", collapsed && "w-8")}>
-          <div className="w-8 h-8 shrink-0 rounded bg-primary flex items-center justify-center text-primary-foreground">
-            <Activity className="w-5 h-5" />
+      <div className={cn("h-14 flex items-center border-b border-sidebar-border", collapsed ? "justify-center" : "px-4 justify-between")}>
+        {!collapsed && (
+          <div className="flex items-center gap-2 font-bold tracking-tight text-lg overflow-hidden">
+            <div className="w-8 h-8 shrink-0 rounded bg-primary flex items-center justify-center text-primary-foreground">
+              <Activity className="w-5 h-5" />
+            </div>
+            <span className="whitespace-nowrap">SensorQubit</span>
           </div>
-          {!collapsed && <span className="whitespace-nowrap">SensorQubit</span>}
-        </div>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn("h-8 w-8 text-muted-foreground hover:text-foreground", collapsed && "h-10 w-10")}
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
       </div>
 
       {/* Back to Modules Link */}
@@ -86,16 +96,9 @@ export function Sidebar() {
         </nav>
       </div>
 
-      {/* Footer Toggle */}
-      <div className="p-2 border-t border-sidebar-border">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="w-full flex items-center justify-center text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? <Menu className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </Button>
+      {/* Footer - removed toggle as it is now at the top */}
+      <div className="p-2 border-t border-sidebar-border text-xs text-center text-muted-foreground">
+        {!collapsed && <span>v1.0.2</span>}
       </div>
     </div>
   );
