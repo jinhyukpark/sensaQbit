@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronRight, Search, Cpu, Factory, Settings2, AlertCircle, CheckSquare, Square } from "lucide-react";
+import { ChevronRight, Search, Cpu, Factory, Settings2, AlertCircle, CheckSquare, Square, ArrowUpDown, Columns, ListFilter } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +25,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import robotArmImage from '@assets/generated_images/semiconductor_robot_arm_in_cleanroom.png';
 
 // Mock Tree Data
@@ -148,6 +161,9 @@ const generateTableData = (count: number) => {
     "EQP-2005-F02 (Flow)", 
     "EQP-2005-W05 (Power)"
   ];
+  const factories = ["Factory Alpha", "Factory Beta", "Factory Gamma"];
+  const products = ["Wafer-200mm", "Wafer-300mm", "PCB-MultiLayer"];
+  const processes = ["Etching", "Deposition", "Cleaning", "Lithography", "Assembly"];
 
   return Array.from({ length: count }, (_, i) => {
     const isDefective = Math.random() > 0.85; // 15% defect rate
@@ -166,6 +182,9 @@ const generateTableData = (count: number) => {
       date: new Date(Date.now() - i * 45000).toLocaleString('en-US', { 
         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true 
       }),
+      factory: factories[Math.floor(Math.random() * factories.length)],
+      product: products[Math.floor(Math.random() * products.length)],
+      process: processes[Math.floor(Math.random() * processes.length)],
     };
   });
 };
@@ -179,8 +198,25 @@ export default function HistoryPage() {
   const [selectedSensors, setSelectedSensors] = useState<string[]>(["temp-0", "temp-1"]);
   const [filterStatus, setFilterStatus] = useState<"all" | "fault">("all");
   
+  // Toolbar State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
+
+  // Column Visibility State
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    factory: true,
+    product: true,
+    process: true,
+    productId: true,
+    location: true,
+    section: true,
+    status: true,
+    date: true,
+  });
+
   // Resizable Columns State
-  const [colWidths, setColWidths] = useState<number[]>([180, 200, 200, 120, 180]);
+  // Default sizes for: factory, product, process, productId, location, section, status, date
+  const [colWidths, setColWidths] = useState<number[]>([120, 120, 120, 180, 200, 150, 120, 180]);
   const isResizing = useRef<number>(-1);
   const startX = useRef<number>(0);
   const startWidth = useRef<number>(0);
@@ -191,7 +227,7 @@ export default function HistoryPage() {
       if (isResizing.current >= 0) {
         const delta = e.clientX - startX.current;
         const newWidths = [...colWidths];
-        newWidths[isResizing.current] = Math.max(100, startWidth.current + delta);
+        newWidths[isResizing.current] = Math.max(80, startWidth.current + delta);
         setColWidths(newWidths);
       }
     };
@@ -211,6 +247,17 @@ export default function HistoryPage() {
       window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [colWidths]);
+
+  // Update column widths when visibility changes
+  useEffect(() => {
+    const visibleCount = Object.values(visibleColumns).filter(v => v).length;
+    if (colWidths.length !== visibleCount) {
+       // Reset widths if column count changes
+       // This is a simplification; in a real app we'd map IDs to widths
+       const newWidths = Array(visibleCount).fill(150);
+       setColWidths(newWidths);
+    }
+  }, [visibleColumns]);
 
   const startResize = (index: number, e: React.MouseEvent) => {
     isResizing.current = index;
@@ -245,15 +292,50 @@ export default function HistoryPage() {
     
     let data = initialTableData;
     
+    // Status Filter
     if (filterStatus === "fault") {
       data = data.filter(d => d.isDefective);
     }
-    
-    return data;
-  }, [selectedSensors, filterStatus]);
+
+    // Search Filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      data = data.filter(d => 
+        d.productId.toLowerCase().includes(q) ||
+        d.location.toLowerCase().includes(q) ||
+        d.section.toLowerCase().includes(q) ||
+        d.factory.toLowerCase().includes(q) ||
+        d.product.toLowerCase().includes(q) ||
+        d.process.toLowerCase().includes(q)
+      );
+    }
+
+    // Sorting
+    return [...data].sort((a, b) => {
+      if (sortOrder === "newest") return new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (sortOrder === "oldest") return new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (sortOrder === "factory") return a.factory.localeCompare(b.factory);
+      if (sortOrder === "product") return a.product.localeCompare(b.product);
+      return 0;
+    });
+  }, [selectedSensors, filterStatus, searchQuery, sortOrder]);
 
   // Dynamic grid style
   const gridTemplateColumns = colWidths.map(w => `${w}px`).join(' ');
+
+  // Column Definition helper
+  const allColumns = [
+    { id: 'factory', label: 'Factory' },
+    { id: 'product', label: 'Product Type' },
+    { id: 'process', label: 'Process' },
+    { id: 'productId', label: 'Product ID' },
+    { id: 'location', label: 'Sensor Location' },
+    { id: 'section', label: 'Zone / Step' },
+    { id: 'status', label: 'Status' },
+    { id: 'date', label: 'Timestamp' },
+  ];
+
+  const activeColumns = allColumns.filter(col => visibleColumns[col.id]);
 
   return (
     <AppLayout title="History Analysis">
@@ -402,28 +484,98 @@ export default function HistoryPage() {
                   </div>
 
                   {/* 3. Detailed Data Table */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-muted-foreground">Detailed History Table</h3>
-                      <div className="flex items-center gap-2">
-                        <Select value={filterStatus} onValueChange={(val: "all" | "fault") => setFilterStatus(val)}>
-                          <SelectTrigger className="h-8 w-[140px] text-xs bg-background">
-                            <SelectValue placeholder="Filter Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">View All</SelectItem>
-                            <SelectItem value="fault">Fault Only</SelectItem>
-                          </SelectContent>
-                        </Select>
+                  <div className="space-y-4">
+                    {/* Toolbar */}
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search alarms..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-9 h-9 text-sm"
+                        />
                       </div>
+                      
+                      {/* Filter Popover */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-9 border-dashed">
+                            <ListFilter className="mr-2 h-4 w-4" />
+                            Filters
+                            {filterStatus !== "all" && (
+                              <span className="ml-1 rounded-full bg-primary/10 w-2 h-2" />
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[200px] p-0" align="end">
+                          <div className="p-2">
+                            <div className="space-y-2">
+                              <h4 className="font-medium text-xs leading-none text-muted-foreground mb-2 px-2 pt-1">Status</h4>
+                              <Select value={filterStatus} onValueChange={(val: "all" | "fault") => setFilterStatus(val)}>
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all">View All</SelectItem>
+                                  <SelectItem value="fault">Fault Only</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Columns Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="h-9 border-dashed">
+                            <Columns className="mr-2 h-4 w-4" />
+                            Columns
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-[150px]">
+                          <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          {allColumns.map((col) => (
+                            <DropdownMenuCheckboxItem
+                              key={col.id}
+                              checked={visibleColumns[col.id]}
+                              onCheckedChange={(checked) => 
+                                setVisibleColumns(prev => ({ ...prev, [col.id]: checked }))
+                              }
+                            >
+                              {col.label}
+                            </DropdownMenuCheckboxItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      {/* Sort Dropdown */}
+                      <Select value={sortOrder} onValueChange={setSortOrder}>
+                        <SelectTrigger className="w-[160px] h-9 border-dashed">
+                          <div className="flex items-center gap-2">
+                            <ArrowUpDown className="h-3.5 w-3.5" />
+                            <span className="truncate">Sort: {sortOrder.charAt(0).toUpperCase() + sortOrder.slice(1)}</span>
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="newest">Newest First</SelectItem>
+                          <SelectItem value="oldest">Oldest First</SelectItem>
+                          <SelectItem value="factory">Factory</SelectItem>
+                          <SelectItem value="product">Product</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+
+                    {/* Table */}
                     <div className="border rounded-md overflow-auto">
                       <div className="min-w-max">
                         {/* Table Header */}
                         <div className="grid border-b bg-muted/50 text-xs font-medium text-muted-foreground" style={{ gridTemplateColumns }}>
-                          {['Product ID', 'Sensor Location', 'Process Step', 'Status', 'Timestamp'].map((header, index) => (
-                            <div key={header} className={`relative px-4 py-2 border-r border-border/50 flex items-center justify-between group select-none ${index === 4 ? 'text-right' : ''}`}>
-                              <span className={index === 4 ? 'w-full text-right' : ''}>{header}</span>
+                          {activeColumns.map((col, index) => (
+                            <div key={col.id} className="relative px-4 py-2 border-r border-border/50 flex items-center justify-between group select-none">
+                              <span className="truncate">{col.label}</span>
                               <div 
                                 className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors z-10"
                                 onMouseDown={(e) => startResize(index, e)}
@@ -436,28 +588,57 @@ export default function HistoryPage() {
                           {tableData.length > 0 ? (
                             tableData.map((row, i) => (
                               <div key={i} className="grid hover:bg-muted/50 items-center transition-colors" style={{ gridTemplateColumns }}>
-                                <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">{row.productId}</div>
-                                <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
-                                  <Badge variant="outline" className="font-normal bg-slate-50 text-slate-600">
-                                    {row.location}
-                                  </Badge>
-                                </div>
-                                <div className="px-4 py-3 border-r border-border/50 h-full flex items-center text-muted-foreground text-xs truncate">{row.section}</div>
-                                <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
-                                  {row.isDefective ? (
-                                    <Badge variant="destructive" className="font-normal text-[10px]">{row.statusText}</Badge>
-                                  ) : (
-                                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-normal text-[10px]">Normal</Badge>
-                                  )}
-                                </div>
-                                <div className="px-4 py-3 text-right text-muted-foreground text-xs font-mono h-full flex items-center justify-end truncate">
-                                  {row.date}
-                                </div>
+                                {visibleColumns.factory && (
+                                  <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">
+                                    {row.factory}
+                                  </div>
+                                )}
+                                {visibleColumns.product && (
+                                  <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">
+                                    {row.product}
+                                  </div>
+                                )}
+                                {visibleColumns.process && (
+                                  <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">
+                                    {row.process}
+                                  </div>
+                                )}
+                                {visibleColumns.productId && (
+                                  <div className="px-4 py-3 font-medium text-xs border-r border-border/50 h-full flex items-center truncate">
+                                    {row.productId}
+                                  </div>
+                                )}
+                                {visibleColumns.location && (
+                                  <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
+                                    <Badge variant="outline" className="font-normal bg-slate-50 text-slate-600">
+                                      {row.location}
+                                    </Badge>
+                                  </div>
+                                )}
+                                {visibleColumns.section && (
+                                  <div className="px-4 py-3 border-r border-border/50 h-full flex items-center text-muted-foreground text-xs truncate">
+                                    {row.section}
+                                  </div>
+                                )}
+                                {visibleColumns.status && (
+                                  <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
+                                    {row.isDefective ? (
+                                      <Badge variant="destructive" className="font-normal text-[10px]">{row.statusText}</Badge>
+                                    ) : (
+                                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 font-normal text-[10px]">Normal</Badge>
+                                    )}
+                                  </div>
+                                )}
+                                {visibleColumns.date && (
+                                  <div className="px-4 py-3 text-muted-foreground text-xs font-mono h-full flex items-center truncate">
+                                    {row.date}
+                                  </div>
+                                )}
                               </div>
                             ))
                           ) : (
                             <div className="p-8 text-center text-muted-foreground text-sm">
-                              Please select sensors to view detailed telemetry data.
+                              No data found matching your filters.
                             </div>
                           )}
                         </div>
