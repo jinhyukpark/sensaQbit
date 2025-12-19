@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { addDays, subDays, subMonths, subYears, format } from "date-fns";
 import { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -746,88 +747,227 @@ export default function HistoryPage() {
           {/* Right Sidebar: Equipment Detail */}
           <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
             <div className="h-full flex flex-col border-l">
-              <div className="p-4 border-b bg-muted/10">
-                <h2 className="font-semibold text-sm">Equipment Details</h2>
-              </div>
-              <ScrollArea className="flex-1">
-                <div className="p-4 space-y-6">
-                  
-                  {/* Equipment Header */}
-                  <div className="space-y-2">
-                    <div className="h-40 bg-muted/20 rounded-lg border overflow-hidden mb-4">
-                      <img 
-                        src={robotArmImage} 
-                        alt="Robot Arm K-200" 
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-                    <h3 className="font-bold text-lg">{selectedNode ? "Robot Arm K-200" : "Select Equipment"}</h3>
-                    <Badge variant="outline" className="font-mono text-xs">EQP-2005-S03</Badge>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                      Operational
-                    </div>
-                  </div>
-
-                  {/* Specifications */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Specifications</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="text-muted-foreground">Model</div>
-                      <div className="font-medium text-right">K-Series 200</div>
-                      
-                      <div className="text-muted-foreground">Install Date</div>
-                      <div className="font-medium text-right">2023-05-15</div>
-                      
-                      <div className="text-muted-foreground">Last Maint</div>
-                      <div className="font-medium text-right">2024-11-20</div>
-                      
-                      <div className="text-muted-foreground">Cycle Time</div>
-                      <div className="font-medium text-right">4.2s</div>
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-4 space-y-3">
-                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Current Status</h4>
-                    <div className="space-y-3">
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span>Load</span>
-                          <span className="font-medium">78%</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-500 w-[78%]"></div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span>Temperature</span>
-                          <span className="font-medium">42°C</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 w-[42%]"></div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span>Vibration</span>
-                          <span className="font-medium text-amber-600">Warning</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-500 w-[85%]"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-4">
-                     <Button className="w-full" variant="outline" size="sm">View Maintenance Log</Button>
-                  </div>
-
+              <Tabs defaultValue="equipment" className="flex-1 flex flex-col w-full h-full">
+                <div className="border-b bg-muted/10 px-2">
+                  <TabsList className="w-full justify-start rounded-none border-b-0 bg-transparent p-0 h-11">
+                    <TabsTrigger 
+                      value="equipment" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary px-4 h-11 text-xs font-medium"
+                    >
+                      Equipment
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="product" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary px-4 h-11 text-xs font-medium"
+                    >
+                      Product
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="process" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary px-4 h-11 text-xs font-medium"
+                    >
+                      Process
+                    </TabsTrigger>
+                  </TabsList>
                 </div>
-              </ScrollArea>
+                
+                <ScrollArea className="flex-1">
+                  <TabsContent value="equipment" className="m-0 p-4 space-y-6">
+                    {/* Equipment Header */}
+                    <div className="space-y-2">
+                      <div className="h-40 bg-muted/20 rounded-lg border overflow-hidden mb-4 relative group">
+                        <img 
+                          src={robotArmImage} 
+                          alt="Robot Arm K-200" 
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                          <Badge variant="secondary" className="text-[10px] bg-white/90 text-black">Live Feed</Badge>
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-lg">{selectedNode ? "Robot Arm K-200" : "Select Equipment"}</h3>
+                      <Badge variant="outline" className="font-mono text-xs">EQP-2005-S03</Badge>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        Operational
+                      </div>
+                    </div>
+
+                    {/* Specifications */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Settings2 className="w-3 h-3" /> Specifications
+                      </h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm bg-muted/20 p-3 rounded-md border">
+                        <div className="text-muted-foreground">Model</div>
+                        <div className="font-medium text-right">K-Series 200</div>
+                        
+                        <div className="text-muted-foreground">Install Date</div>
+                        <div className="font-medium text-right">2023-05-15</div>
+                        
+                        <div className="text-muted-foreground">Last Maint</div>
+                        <div className="font-medium text-right">2024-11-20</div>
+                        
+                        <div className="text-muted-foreground">Cycle Time</div>
+                        <div className="font-medium text-right">4.2s</div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4 space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                        <Cpu className="w-3 h-3" /> Current Status
+                      </h4>
+                      <div className="space-y-4">
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-xs">
+                            <span>Load</span>
+                            <span className="font-medium">78%</span>
+                          </div>
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 w-[78%] rounded-full"></div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-xs">
+                            <span>Temperature</span>
+                            <span className="font-medium">42°C</span>
+                          </div>
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 w-[42%] rounded-full"></div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-xs">
+                            <span>Vibration</span>
+                            <span className="font-medium text-amber-600">Warning</span>
+                          </div>
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-500 w-[85%] rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t pt-4">
+                       <Button className="w-full" variant="outline" size="sm">View Maintenance Log</Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="product" className="m-0 p-4 space-y-6">
+                    <div className="space-y-2">
+                      <h3 className="font-bold text-lg">Product Information</h3>
+                      <p className="text-sm text-muted-foreground">Currently processing batch details</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lot Details</h4>
+                      <div className="bg-card border rounded-lg p-3 space-y-3 shadow-sm">
+                        <div className="flex justify-between items-center border-b pb-2">
+                          <span className="text-xs text-muted-foreground">Lot ID</span>
+                          <span className="text-sm font-mono font-medium">LOT-20254152-001</span>
+                        </div>
+                        <div className="flex justify-between items-center border-b pb-2">
+                          <span className="text-xs text-muted-foreground">Product Type</span>
+                          <span className="text-sm font-medium">Wafer-300mm</span>
+                        </div>
+                         <div className="flex justify-between items-center border-b pb-2">
+                          <span className="text-xs text-muted-foreground">Quantity</span>
+                          <span className="text-sm font-medium">25 Units</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground">Priority</span>
+                          <Badge variant="secondary" className="text-[10px] bg-purple-100 text-purple-700">High</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Production Status</h4>
+                      <div className="space-y-4">
+                         <div className="bg-muted/30 p-3 rounded-lg border">
+                           <div className="flex justify-between text-xs mb-2">
+                             <span className="text-muted-foreground">Completion</span>
+                             <span className="font-medium">85%</span>
+                           </div>
+                           <div className="h-2 w-full bg-muted rounded-full overflow-hidden mb-1">
+                             <div className="h-full bg-primary w-[85%] rounded-full"></div>
+                           </div>
+                           <p className="text-[10px] text-muted-foreground text-right">Est. 45 mins remaining</p>
+                         </div>
+                         
+                         <div className="grid grid-cols-2 gap-3">
+                           <div className="bg-muted/30 p-3 rounded-lg border">
+                              <div className="text-[10px] text-muted-foreground mb-1">Total Yield</div>
+                              <div className="text-lg font-bold text-emerald-600">99.2%</div>
+                           </div>
+                           <div className="bg-muted/30 p-3 rounded-lg border">
+                              <div className="text-[10px] text-muted-foreground mb-1">Defects</div>
+                              <div className="text-lg font-bold text-muted-foreground">2</div>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="process" className="m-0 p-4 space-y-6">
+                     <div className="space-y-2">
+                      <h3 className="font-bold text-lg">Process Parameters</h3>
+                      <div className="flex items-center gap-2">
+                         <Badge variant="outline">Etching</Badge>
+                         <span className="text-xs text-muted-foreground">Step 4 of 12</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Active Recipe</h4>
+                      <div className="p-3 bg-muted/40 border rounded-lg font-mono text-xs flex items-center justify-between">
+                        <span>RECIPE-ETCH-STD-V2</span>
+                        <Badge variant="secondary" className="h-5 text-[10px]">Running</Badge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Parameters</h4>
+                      <div className="space-y-2">
+                        <div className="p-3 border rounded-lg bg-card shadow-sm hover:border-primary/50 transition-colors">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium">Chamber Pressure</span>
+                            <span className="text-xs text-muted-foreground">Set: 45.0</span>
+                          </div>
+                          <div className="flex items-baseline gap-1">
+                             <span className="text-xl font-bold">44.8</span>
+                             <span className="text-xs text-muted-foreground">mTorr</span>
+                          </div>
+                        </div>
+
+                         <div className="p-3 border rounded-lg bg-card shadow-sm hover:border-primary/50 transition-colors">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium">RF Power</span>
+                            <span className="text-xs text-muted-foreground">Set: 1200</span>
+                          </div>
+                          <div className="flex items-baseline gap-1">
+                             <span className="text-xl font-bold">1198</span>
+                             <span className="text-xs text-muted-foreground">Watts</span>
+                          </div>
+                        </div>
+
+                         <div className="p-3 border rounded-lg bg-card shadow-sm hover:border-primary/50 transition-colors">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs font-medium">Gas Flow (Ar)</span>
+                            <span className="text-xs text-muted-foreground">Set: 50</span>
+                          </div>
+                          <div className="flex items-baseline gap-1">
+                             <span className="text-xl font-bold">49.9</span>
+                             <span className="text-xs text-muted-foreground">sccm</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </ScrollArea>
+              </Tabs>
             </div>
           </ResizablePanel>
 
