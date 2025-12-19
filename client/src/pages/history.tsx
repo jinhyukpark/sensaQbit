@@ -422,7 +422,20 @@ export default function HistoryPage() {
           <ResizableHandle />
 
           {/* Right Content: Analytics */}
-          <ResizablePanel defaultSize={isDetailsOpen ? 60 : 80}>
+          <ResizablePanel defaultSize={isDetailsOpen ? 60 : 80} className="relative">
+            {!isDetailsOpen && (
+              <div className="absolute right-0 top-6 z-20">
+                 <Button 
+                   variant="secondary" 
+                   size="sm" 
+                   className="rounded-l-md rounded-r-none border-l border-y shadow-sm h-10 pl-3 pr-4 gap-2 bg-background hover:bg-accent"
+                   onClick={() => setIsDetailsOpen(true)}
+                 >
+                   <PanelRightOpen className="h-4 w-4 text-muted-foreground" />
+                   <span className="text-xs font-medium text-muted-foreground">View Details</span>
+                 </Button>
+              </div>
+            )}
             <div className="h-full p-6 overflow-y-auto space-y-6 bg-background/50">
               
               {/* Summary Cards */}
@@ -660,21 +673,6 @@ export default function HistoryPage() {
                           <SelectItem value="product">Product</SelectItem>
                         </SelectContent>
                       </Select>
-                      
-                      {/* Toggle Details Panel */}
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-9 w-9" 
-                        onClick={() => setIsDetailsOpen(!isDetailsOpen)}
-                        title={isDetailsOpen ? "Hide Details" : "Show Details"}
-                      >
-                         {isDetailsOpen ? (
-                           <PanelRightClose className="h-4 w-4" />
-                         ) : (
-                           <PanelRightOpen className="h-4 w-4" />
-                         )}
-                      </Button>
                     </div>
 
                     {/* Table */}
