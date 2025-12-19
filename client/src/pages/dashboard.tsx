@@ -648,13 +648,11 @@ export default function Dashboard() {
                     </div>
                   </PopoverContent>
                 </Popover>
-              </div>
 
-              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-9 text-xs ml-auto">
-                      <Columns className="w-3.5 h-3.5 mr-2" />
+                    <Button variant="outline" size="sm" className="h-9 text-xs gap-2 border-dashed">
+                      <Columns className="w-3.5 h-3.5" />
                       Columns
                     </Button>
                   </DropdownMenuTrigger>
@@ -678,12 +676,16 @@ export default function Dashboard() {
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </div>
 
-                <span className="text-xs text-muted-foreground whitespace-nowrap hidden sm:inline-block">Sort by:</span>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Select value={sortOrder} onValueChange={setSortOrder}>
-                  <SelectTrigger className="w-[140px] h-9 text-xs">
-                    <ArrowUpDown className="w-3.5 h-3.5 mr-2" />
-                    <SelectValue placeholder="Sort by" />
+                  <SelectTrigger className="w-[160px] h-9 text-xs">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                       <ArrowUpDown className="w-3.5 h-3.5" />
+                       <span className="text-foreground">Sort:</span>
+                    </div>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="newest">Time (Newest)</SelectItem>
