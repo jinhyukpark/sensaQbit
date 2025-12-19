@@ -176,6 +176,35 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Password Change */}
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Key className="w-5 h-5 text-primary" /> Security Settings
+                  </CardTitle>
+                  <CardDescription>Update your password and authentication methods.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="current-password">Current Password</Label>
+                      <Input id="current-password" type="password" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="new-password">New Password</Label>
+                      <Input id="new-password" type="password" />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="confirm-password">Confirm Password</Label>
+                      <Input id="confirm-password" type="password" />
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="justify-end border-t pt-4">
+                  <Button variant="secondary">Change Password</Button>
+                </CardFooter>
+              </Card>
             </div>
           </TabsContent>
 
