@@ -185,16 +185,16 @@ export default function Dashboard() {
     sensor: true,
     type: true,
     category: true,
-    factory: false,
-    product: false,
-    process: false,
-    equipment: false,
+    factory: true,
+    product: true,
+    process: true,
+    equipment: true,
   });
 
   // Resizable Columns State
-  // Default sizes: time, sensor, type, category
+  // Default sizes: time, sensor, type, category, factory, product, process, equipment
   // We'll manage column widths dynamically based on visible columns
-  const [colWidths, setColWidths] = useState<number[]>([150, 300, 300, 200]);
+  const [colWidths, setColWidths] = useState<number[]>([150, 200, 150, 120, 120, 120, 120, 120]);
   const isResizing = useRef<number>(-1);
   const startX = useRef<number>(0);
   const startWidth = useRef<number>(0);
