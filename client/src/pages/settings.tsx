@@ -13,10 +13,20 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   User, CreditCard, Shield, Users, Database, Key, Plus, Check, Server, 
-  Factory, Cog, Wrench, Activity, ChevronRight, FolderTree, Trash2, Edit2, Info
+  Factory, Cog, Wrench, Activity, ChevronRight, FolderTree, Trash2, Edit2, Info,
+  Network, Wifi, WifiOff, RefreshCw, AlertCircle
 } from "lucide-react";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Mock Data for Hierarchy
 const initialHierarchy = [
@@ -72,11 +82,22 @@ const availableModels = [
   }
 ];
 
+// Mock Data Connections
+const initialConnections = [
+  { id: "conn-1", name: "Factory Alpha Server", ip: "192.168.1.100", port: "8080", status: "active", lastPing: "2ms" },
+  { id: "conn-2", name: "Factory Beta Server", ip: "192.168.2.100", port: "8080", status: "inactive", lastPing: "-" },
+  { id: "conn-3", name: "Legacy Database", ip: "10.0.0.50", port: "5432", status: "error", lastPing: "Timeout" },
+];
+
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("system");
   const [selectedNode, setSelectedNode] = useState<any>(initialHierarchy[0]);
   const [configTab, setConfigTab] = useState("master-data");
   const [selectedModel, setSelectedModel] = useState<string>("m-01");
+
+  // Connection State
+  const [connections, setConnections] = useState(initialConnections);
+  const [testingConnectionId, setTestingConnectionId] = useState<string | null>(null);
 
   // Dynamic Fields State (Mocked)
   const [dynamicFields, setDynamicFields] = useState<{key: string, value: string}[]>([
@@ -96,6 +117,25 @@ export default function SettingsPage() {
 
   const removeField = (index: number) => {
     setDynamicFields(dynamicFields.filter((_, i) => i !== index));
+  };
+
+  const handleTestConnection = (id: string) => {
+    setTestingConnectionId(id);
+    setTimeout(() => {
+      setConnections(prev => prev.map(c => {
+        if (c.id === id) {
+          // Simulate random result
+          const success = Math.random() > 0.3;
+          return {
+            ...c,
+            status: success ? "active" : "error",
+            lastPing: success ? `${Math.floor(Math.random() * 20 + 5)}ms` : "Failed"
+          };
+        }
+        return c;
+      }));
+      setTestingConnectionId(null);
+    }, 1500);
   };
 
   // Helper to render tree nodes recursively
@@ -138,9 +178,8 @@ export default function SettingsPage() {
             </TabsTrigger>
           </TabsList>
           
-          {/* Account & License Tab (Unchanged content from previous, condensed for brevity) */}
+          {/* Account & License Tab */}
           <TabsContent value="account" className="space-y-6 overflow-y-auto">
-            {/* ... Existing Account Content ... */}
              <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -208,7 +247,7 @@ export default function SettingsPage() {
             </div>
           </TabsContent>
 
-          {/* System & FDC Configuration Tab (Revamped) */}
+          {/* System & FDC Configuration Tab */}
           <TabsContent value="system" className="flex-1 flex flex-col min-h-0">
             <div className="flex-1 flex gap-6 min-h-0">
               {/* Sidebar for Sub-navigation */}
@@ -226,6 +265,13 @@ export default function SettingsPage() {
                   onClick={() => setConfigTab("models")}
                 >
                   <Database className="w-4 h-4 mr-2" /> Model Management
+                </Button>
+                <Button 
+                  variant={configTab === "connections" ? "default" : "ghost"} 
+                  className="w-full justify-start" 
+                  onClick={() => setConfigTab("connections")}
+                >
+                  <Network className="w-4 h-4 mr-2" /> Data Connections
                 </Button>
               </div>
 
@@ -487,11 +533,107 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 )}
+                
+                {configTab === "connections" && (
+                  <div className="flex h-full p-6 flex-col gap-6">
+                    <div className="flex justify-between items-center">
+                       <div>
+                          <h2 className="text-lg font-bold flex items-center gap-2">
+                            <Network className="w-5 h-5 text-primary" />
+                            Data Connections
+                          </h2>
+                          <p className="text-sm text-muted-foreground mt-1">Manage factory server connections and data streams.</p>
+                       </div>
+                       <Dialog>
+                        <DialogTrigger asChild>
+                          <Button><Plus className="w-4 h-4 mr-2" /> Add Connection</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Add New Connection</DialogTitle>
+                            <DialogDescription>
+                              Configure a new data source connection point.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="name" className="text-right">Name</Label>
+                              <Input id="name" placeholder="e.g. Factory Alpha Server" className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="ip" className="text-right">IP Address</Label>
+                              <Input id="ip" placeholder="0.0.0.0" className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="port" className="text-right">Port</Label>
+                              <Input id="port" placeholder="8080" className="col-span-3" />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button type="submit">Save Connection</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      {connections.map((conn) => (
+                        <Card key={conn.id} className="overflow-hidden">
+                          <div className="p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-full ${
+                                conn.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 
+                                conn.status === 'error' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500'
+                              }`}>
+                                {conn.status === 'active' ? <Wifi className="w-5 h-5" /> : 
+                                 conn.status === 'error' ? <AlertCircle className="w-5 h-5" /> : <WifiOff className="w-5 h-5" />}
+                              </div>
+                              <div>
+                                <h3 className="font-medium">{conn.name}</h3>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground font-mono mt-1">
+                                  <span>{conn.ip}:{conn.port}</span>
+                                  {conn.status === 'active' && (
+                                    <span className="flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                      Ping: {conn.lastPing}
+                                    </span>
+                                  )}
+                                  {conn.status === 'error' && (
+                                     <span className="text-xs px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-100">
+                                       Connection Failed
+                                     </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => handleTestConnection(conn.id)}
+                                disabled={testingConnectionId === conn.id}
+                              >
+                                <RefreshCw className={`w-3.5 h-3.5 mr-2 ${testingConnectionId === conn.id ? "animate-spin" : ""}`} />
+                                {testingConnectionId === conn.id ? "Testing..." : "Test Connection"}
+                              </Button>
+                              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className={`h-1 w-full ${
+                            conn.status === 'active' ? 'bg-emerald-500' : 
+                            conn.status === 'error' ? 'bg-red-500' : 'bg-slate-200'
+                          }`}></div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>
 
-          {/* Team & Security Tab (Unchanged content from previous, condensed for brevity) */}
+          {/* Team & Security Tab */}
           <TabsContent value="team" className="space-y-6 overflow-y-auto">
              <div className="grid gap-6 md:grid-cols-3">
                <Card className="md:col-span-2">
