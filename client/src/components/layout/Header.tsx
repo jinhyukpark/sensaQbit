@@ -30,7 +30,7 @@ import { useFilter } from "@/lib/filter-context";
 import { Link, useLocation } from "wouter";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
-export function Header({ title }: { title: string }) {
+export function Header({ title, hideFilters = false }: { title: string; hideFilters?: boolean }) {
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
     to: addDays(new Date(), 7),
@@ -69,89 +69,93 @@ export function Header({ title }: { title: string }) {
         </TooltipProvider>
 
         {/* Context Selectors */}
-        <div className="flex items-center gap-2 mr-4">
-          <Select value={factory} onValueChange={setFactory}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue placeholder="Select Factory" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Factories</SelectItem>
-              <SelectItem value="factory-a">Factory Alpha</SelectItem>
-              <SelectItem value="factory-b">Factory Beta</SelectItem>
-            </SelectContent>
-          </Select>
+        {!hideFilters && (
+          <div className="flex items-center gap-2 mr-4">
+            <Select value={factory} onValueChange={setFactory}>
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <SelectValue placeholder="Select Factory" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Factories</SelectItem>
+                <SelectItem value="factory-a">Factory Alpha</SelectItem>
+                <SelectItem value="factory-b">Factory Beta</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={product} onValueChange={setProduct}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue placeholder="Select Product" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Products</SelectItem>
-              <SelectItem value="prod-1">Product X-100</SelectItem>
-              <SelectItem value="prod-2">Product Y-200</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={product} onValueChange={setProduct}>
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <SelectValue placeholder="Select Product" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Products</SelectItem>
+                <SelectItem value="prod-1">Product X-100</SelectItem>
+                <SelectItem value="prod-2">Product Y-200</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={process} onValueChange={setProcess}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue placeholder="Select Process" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Processes</SelectItem>
-              <SelectItem value="process-1">Etching Line A</SelectItem>
-              <SelectItem value="process-2">Assembly Line B</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={process} onValueChange={setProcess}>
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <SelectValue placeholder="Select Process" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Processes</SelectItem>
+                <SelectItem value="process-1">Etching Line A</SelectItem>
+                <SelectItem value="process-2">Assembly Line B</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select value={equipment} onValueChange={setEquipment}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
-              <SelectValue placeholder="Select Equipment" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Equipment</SelectItem>
-              <SelectItem value="equip-1">Robot Arm K-200</SelectItem>
-              <SelectItem value="equip-2">Conveyor Belt M-4</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <Select value={equipment} onValueChange={setEquipment}>
+              <SelectTrigger className="w-[140px] h-8 text-xs">
+                <SelectValue placeholder="Select Equipment" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Equipment</SelectItem>
+                <SelectItem value="equip-1">Robot Arm K-200</SelectItem>
+                <SelectItem value="equip-2">Conveyor Belt M-4</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Date Range Picker */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              id="date"
-              variant={"outline"}
-              className={cn(
-                "w-[260px] h-8 justify-start text-left font-normal text-xs",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-3 w-3" />
-              {date?.from ? (
-                date.to ? (
-                  <>
-                    {format(date.from, "LLL dd, y")} -{" "}
-                    {format(date.to, "LLL dd, y")}
-                  </>
+        {!hideFilters && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="date"
+                variant={"outline"}
+                className={cn(
+                  "w-[260px] h-8 justify-start text-left font-normal text-xs",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-3 w-3" />
+                {date?.from ? (
+                  date.to ? (
+                    <>
+                      {format(date.from, "LLL dd, y")} -{" "}
+                      {format(date.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(date.from, "LLL dd, y")
+                  )
                 ) : (
-                  format(date.from, "LLL dd, y")
-                )
-              ) : (
-                <span>Pick a date</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="end">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={date?.from}
-              selected={date}
-              onSelect={setDate}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={date?.from}
+                selected={date}
+                onSelect={setDate}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
 
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="h-8 w-8 relative">

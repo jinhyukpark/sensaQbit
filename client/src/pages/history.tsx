@@ -338,7 +338,7 @@ export default function HistoryPage() {
   const activeColumns = allColumns.filter(col => visibleColumns[col.id]);
 
   return (
-    <AppLayout title="History Analysis">
+    <AppLayout title="History Analysis" hideFilters={true}>
       <div className="h-[calc(100vh-100px)] border rounded-lg overflow-hidden bg-card shadow-sm">
         <ResizablePanelGroup direction="horizontal">
           
