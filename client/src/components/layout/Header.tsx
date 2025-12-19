@@ -35,7 +35,7 @@ export function Header({ title }: { title: string }) {
     from: new Date(),
     to: addDays(new Date(), 7),
   });
-  const { factory, setFactory, process, setProcess, equipment, setEquipment } = useFilter();
+  const { factory, setFactory, product, setProduct, process, setProcess, equipment, setEquipment } = useFilter();
   const [, setLocation] = useLocation();
 
   return (
@@ -78,6 +78,17 @@ export function Header({ title }: { title: string }) {
               <SelectItem value="all">All Factories</SelectItem>
               <SelectItem value="factory-a">Factory Alpha</SelectItem>
               <SelectItem value="factory-b">Factory Beta</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={product} onValueChange={setProduct}>
+            <SelectTrigger className="w-[140px] h-8 text-xs">
+              <SelectValue placeholder="Select Product" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Products</SelectItem>
+              <SelectItem value="prod-1">Product X-100</SelectItem>
+              <SelectItem value="prod-2">Product Y-200</SelectItem>
             </SelectContent>
           </Select>
 
