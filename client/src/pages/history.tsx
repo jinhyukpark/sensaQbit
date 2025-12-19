@@ -135,6 +135,7 @@ const treeData = [
 ];
 
 const sensorCategories = [
+  { id: "all", label: "All", count: 37 },
   { id: "temp", label: "Temperature", count: 9 },
   { id: "pressure", label: "Pressure", count: 9 },
   { id: "flow", label: "Flow Rate", count: 10 },
@@ -198,7 +199,7 @@ const initialTableData = generateTableData(20);
 
 export default function HistoryPage() {
   const [selectedNode, setSelectedNode] = useState<string | null>("eq-1");
-  const [activeCategory, setActiveCategory] = useState<string>("temp");
+  const [activeCategory, setActiveCategory] = useState<string>("all");
   // Default select some sensors to show data immediately
   const [selectedSensors, setSelectedSensors] = useState<string[]>(["temp-0", "temp-1"]);
   const [filterStatus, setFilterStatus] = useState<"all" | "fault">("all");
@@ -281,7 +282,12 @@ export default function HistoryPage() {
   };
   
   // Filter logic
-  const currentSensors = mockSensors[activeCategory] || [];
+  const currentSensors = useMemo(() => {
+    if (activeCategory === "all") {
+      return Object.values(mockSensors).flat();
+    }
+    return mockSensors[activeCategory] || [];
+  }, [activeCategory]);
 
   const handleSelectAll = () => {
     if (selectedSensors.length === currentSensors.length) {
