@@ -4,11 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronRight, Search, Cpu, Factory, Settings2, AlertCircle, CheckSquare, Square, ArrowUpDown, Columns, ListFilter } from "lucide-react";
+import { ChevronRight, Search, Cpu, Factory, Settings2, AlertCircle, CheckSquare, Square, ArrowUpDown, Columns, ListFilter, Calendar as CalendarIcon } from "lucide-react";
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { addDays, subDays, subMonths, subYears, format } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -201,6 +205,12 @@ export default function HistoryPage() {
   // Toolbar State
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
+  
+  // Date Range State
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 7),
+    to: new Date(),
+  });
 
   // Column Visibility State
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
@@ -334,6 +344,16 @@ export default function HistoryPage() {
     { id: 'status', label: 'Status' },
     { id: 'date', label: 'Timestamp' },
   ];
+
+  // Date preset helper
+  const setPreset = (days?: number, months?: number, years?: number) => {
+    const to = new Date();
+    let from = new Date();
+    if (days) from = subDays(to, days);
+    if (months) from = subMonths(to, months);
+    if (years) from = subYears(to, years);
+    setDate({ from, to });
+  };
 
   const activeColumns = allColumns.filter(col => visibleColumns[col.id]);
 
@@ -551,6 +571,68 @@ export default function HistoryPage() {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
+
+                        {/* Date Range Picker */}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              id="date"
+                              variant={"outline"}
+                              size="sm"
+                              className={cn(
+                                "w-[240px] h-9 justify-start text-left font-normal border-dashed",
+                                !date && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {date?.from ? (
+                                date.to ? (
+                                  <>
+                                    {format(date.from, "LLL dd, y")} -{" "}
+                                    {format(date.to, "LLL dd, y")}
+                                  </>
+                                ) : (
+                                  format(date.from, "LLL dd, y")
+                                )
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <div className="flex">
+                              <div className="border-r p-2 space-y-1 w-[140px]">
+                                <div className="text-xs font-semibold text-muted-foreground mb-2 px-2 py-1">Quick Select</div>
+                                <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7" onClick={() => setPreset(0)}>
+                                  Today
+                                </Button>
+                                <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7" onClick={() => setPreset(7)}>
+                                  Last 7 Days
+                                </Button>
+                                <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7" onClick={() => setPreset(undefined, 1)}>
+                                  Last Month
+                                </Button>
+                                <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7" onClick={() => setPreset(undefined, 3)}>
+                                  Last 3 Months
+                                </Button>
+                                <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7" onClick={() => setPreset(undefined, 6)}>
+                                  Last 6 Months
+                                </Button>
+                                <Button variant="ghost" size="sm" className="w-full justify-start text-xs h-7" onClick={() => setPreset(undefined, undefined, 1)}>
+                                  Last Year
+                                </Button>
+                              </div>
+                              <Calendar
+                                initialFocus
+                                mode="range"
+                                defaultMonth={date?.from}
+                                selected={date}
+                                onSelect={setDate}
+                                numberOfMonths={2}
+                              />
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       {/* Sort Dropdown - Moved to the right */}
