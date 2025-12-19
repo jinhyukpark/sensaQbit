@@ -107,16 +107,16 @@ export function Sidebar() {
                      <CreditCard className="w-4 h-4" />
                    </div>
                    <div className="overflow-hidden">
-                     <div className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">Enterprise Pro</div>
+                     <div className="text-sm font-bold text-pink-400 truncate group-hover:text-pink-300 transition-colors drop-shadow-md">Enterprise Pro</div>
                      <div className="text-[10px] text-muted-foreground truncate flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse shadow-[0_0_8px_rgba(236,72,153,0.8)]"></div>
                         License Active
                      </div>
                    </div>
                 </div>
                 <div className="mt-2 pt-2 border-t border-primary/10 flex justify-between items-center">
                    <span className="text-[10px] text-muted-foreground">Valid until Oct 2024</span>
-                   <span className="text-[10px] text-primary font-bold group-hover:underline transition-all flex items-center">
+                   <span className="text-[10px] text-pink-400 font-bold group-hover:text-pink-300 group-hover:underline transition-all flex items-center">
                       Upgrade <ArrowLeft className="w-2.5 h-2.5 ml-1 rotate-180" />
                    </span>
                 </div>
