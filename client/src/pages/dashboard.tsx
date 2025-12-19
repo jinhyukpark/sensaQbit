@@ -30,6 +30,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useFilter } from "@/lib/filter-context";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -166,6 +171,10 @@ const processSteps = [
 export default function Dashboard() {
   const { factory, process, equipment } = useFilter();
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [filterProcess, setFilterProcess] = useState<string>("all");
+  const [filterProduct, setFilterProduct] = useState<string>("all");
+  const [filterEquipment, setFilterEquipment] = useState<string>("all");
+  
   const [activeFaultCategory, setActiveFaultCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
@@ -273,6 +282,21 @@ export default function Dashboard() {
       filtered = filtered.filter(alarm => alarm.category === activeFilter);
     }
     
+    // Process Filter
+    if (filterProcess !== "all") {
+      filtered = filtered.filter(alarm => alarm.process === filterProcess);
+    }
+
+    // Product Filter
+    if (filterProduct !== "all") {
+      filtered = filtered.filter(alarm => alarm.product === filterProduct);
+    }
+
+    // Equipment Filter
+    if (filterEquipment !== "all") {
+      filtered = filtered.filter(alarm => alarm.equipment === filterEquipment);
+    }
+    
     // Search Filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -292,7 +316,27 @@ export default function Dashboard() {
       if (sortOrder === "type") return a.type.localeCompare(b.type);
       return 0;
     });
-  }, [recentAlarmsRaw, activeFilter, searchQuery, sortOrder]);
+  }, [recentAlarmsRaw, activeFilter, filterProcess, filterProduct, filterEquipment, searchQuery, sortOrder]);
+
+  // Extract unique values for filters
+  const uniqueProcesses = useMemo(() => Array.from(new Set(recentAlarmsRaw.map(a => a.process))).sort(), [recentAlarmsRaw]);
+  const uniqueProducts = useMemo(() => Array.from(new Set(recentAlarmsRaw.map(a => a.product))).sort(), [recentAlarmsRaw]);
+  const uniqueEquipments = useMemo(() => Array.from(new Set(recentAlarmsRaw.map(a => a.equipment))).sort(), [recentAlarmsRaw]);
+
+  const resetFilters = () => {
+    setActiveFilter("all");
+    setFilterProcess("all");
+    setFilterProduct("all");
+    setFilterEquipment("all");
+    setSearchQuery("");
+  };
+
+  const activeFilterCount = [
+    activeFilter !== "all",
+    filterProcess !== "all",
+    filterProduct !== "all",
+    filterEquipment !== "all"
+  ].filter(Boolean).length;
 
   const filteredTitle = useMemo(() => {
     if (!isFiltered) return "Overview (All Factories)";
@@ -519,18 +563,91 @@ export default function Dashboard() {
                   />
                 </div>
                 
-                <Select value={activeFilter} onValueChange={setActiveFilter}>
-                  <SelectTrigger className="w-[140px] h-9 text-xs">
-                    <ListFilter className="w-3.5 h-3.5 mr-2" />
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="data">Data Patterns</SelectItem>
-                    <SelectItem value="physical">Physical Faults</SelectItem>
-                    <SelectItem value="cause">Root Cause</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 text-xs gap-2 border-dashed">
+                      <ListFilter className="w-3.5 h-3.5" />
+                      Filters
+                      {activeFilterCount > 0 && (
+                        <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-primary/10 text-primary">
+                          {activeFilterCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4" align="start">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium text-sm leading-none">Filter Alarms</h4>
+                        {activeFilterCount > 0 && (
+                          <Button variant="ghost" size="sm" className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground" onClick={resetFilters}>
+                            Reset
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Category</label>
+                        <Select value={activeFilter} onValueChange={setActiveFilter}>
+                          <SelectTrigger className="w-full h-8 text-xs">
+                            <SelectValue placeholder="All Categories" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="data">Data Patterns</SelectItem>
+                            <SelectItem value="physical">Physical Faults</SelectItem>
+                            <SelectItem value="cause">Root Cause</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Process</label>
+                        <Select value={filterProcess} onValueChange={setFilterProcess}>
+                          <SelectTrigger className="w-full h-8 text-xs">
+                            <SelectValue placeholder="All Processes" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Processes</SelectItem>
+                            {uniqueProcesses.map(p => (
+                              <SelectItem key={p} value={p}>{p}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Product</label>
+                        <Select value={filterProduct} onValueChange={setFilterProduct}>
+                          <SelectTrigger className="w-full h-8 text-xs">
+                            <SelectValue placeholder="All Products" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Products</SelectItem>
+                            {uniqueProducts.map(p => (
+                              <SelectItem key={p} value={p}>{p}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-medium text-muted-foreground">Equipment</label>
+                        <Select value={filterEquipment} onValueChange={setFilterEquipment}>
+                          <SelectTrigger className="w-full h-8 text-xs">
+                            <SelectValue placeholder="All Equipment" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Equipment</SelectItem>
+                            {uniqueEquipments.map(e => (
+                              <SelectItem key={e} value={e}>{e}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
