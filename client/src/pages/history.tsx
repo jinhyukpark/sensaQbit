@@ -209,7 +209,7 @@ import { Area, AreaChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tool
 
 // Mock DRT Data Generator
 const generateDRTData = (isDefective = false) => {
-  const points = [];
+  const points: any[] = [];
   let currentValue = 50;
   
   for (let i = 0; i < 60; i++) {
