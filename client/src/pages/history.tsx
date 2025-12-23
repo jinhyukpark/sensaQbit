@@ -208,9 +208,10 @@ import {
 import { Area, AreaChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 // Mock DRT Data Generator
-const generateDRTData = () => {
+const generateDRTData = (isDefective = false) => {
   const points = [];
   let currentValue = 50;
+  
   for (let i = 0; i < 60; i++) {
     // Create some phases/segments
     if (i === 10) currentValue = 80;
@@ -224,18 +225,33 @@ const generateDRTData = () => {
     // Calculate range (band)
     const bandWidth = i > 10 && i < 25 ? 15 : 5; // Wider band during transient
     
+    let min = currentValue - bandWidth;
+    let max = currentValue + bandWidth;
+    
+    // Inject Fault if defective
+    let actualValue = currentValue;
+    let isAnomaly = false;
+    
+    if (isDefective) {
+      // Create a spike/drift anomaly around index 35-42
+      if (i >= 35 && i <= 42) {
+         actualValue = currentValue + 25; // Significant deviation
+         isAnomaly = true;
+      }
+    }
+
     points.push({
       time: i,
-      value: currentValue,
-      min: currentValue - bandWidth,
-      max: currentValue + bandWidth,
-      range: [currentValue - bandWidth, currentValue + bandWidth]
+      value: actualValue,
+      min: min,
+      max: max,
+      range: [min, max],
+      isAnomaly,
+      anomalyValue: isAnomaly ? actualValue : null // For red line overlay
     });
   }
   return points;
 };
-
-const drtData = generateDRTData();
 
 export default function HistoryPage() {
   const [selectedNode, setSelectedNode] = useState<string | null>("eq-1");
@@ -245,6 +261,11 @@ export default function HistoryPage() {
   const [filterStatus, setFilterStatus] = useState<"all" | "fault">("all");
   
   const [selectedSensorForChart, setSelectedSensorForChart] = useState<any>(null);
+  
+  const drtData = useMemo(() => {
+    if (!selectedSensorForChart) return [];
+    return generateDRTData(selectedSensorForChart.isDefective);
+  }, [selectedSensorForChart]);
   
   // Right Sidebar State
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
@@ -1073,11 +1094,15 @@ export default function HistoryPage() {
                 <div className="grid grid-cols-4 gap-8">
                    <div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Current Value</div>
-                      <div className="text-xl font-bold font-mono">54.2 <span className="text-xs text-muted-foreground font-normal">mV</span></div>
+                      <div className="text-xl font-bold font-mono">
+                        {selectedSensorForChart?.isDefective ? '85.4' : '54.2'} <span className="text-xs text-muted-foreground font-normal">mV</span>
+                      </div>
                    </div>
                    <div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Signal Stability</div>
-                      <div className="text-xl font-bold text-emerald-600">99.8%</div>
+                      <div className={`text-xl font-bold ${selectedSensorForChart?.isDefective ? 'text-destructive' : 'text-emerald-600'}`}>
+                        {selectedSensorForChart?.isDefective ? '76.4%' : '99.8%'}
+                      </div>
                    </div>
                    <div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Noise Floor</div>
@@ -1085,7 +1110,9 @@ export default function HistoryPage() {
                    </div>
                    <div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</div>
-                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Optimal</Badge>
+                      <Badge variant="outline" className={`${selectedSensorForChart?.isDefective ? 'bg-destructive/10 text-destructive border-destructive/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                        {selectedSensorForChart?.isDefective ? 'Critical Fault' : 'Optimal'}
+                      </Badge>
                    </div>
                 </div>
              </div>
@@ -1095,6 +1122,9 @@ export default function HistoryPage() {
                 <div className="absolute top-4 right-4 z-10 flex gap-2">
                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">Tolerance Band</Badge>
                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Actual Signal</Badge>
+                   {selectedSensorForChart?.isDefective && (
+                     <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-200">Anomaly</Badge>
+                   )}
                 </div>
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={drtData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
@@ -1135,7 +1165,7 @@ export default function HistoryPage() {
                       isAnimationActive={true}
                     />
 
-                    {/* Actual Signal Line */}
+                    {/* Actual Signal Line - Green */}
                     <Line 
                       type="monotone" 
                       dataKey="value" 
@@ -1145,6 +1175,20 @@ export default function HistoryPage() {
                       activeDot={{ r: 6, strokeWidth: 0 }}
                       isAnimationActive={true}
                     />
+
+                    {/* Anomaly Overlay Line - Red */}
+                    {selectedSensorForChart?.isDefective && (
+                      <Line 
+                        type="monotone" 
+                        dataKey="anomalyValue" 
+                        stroke="#ef4444" 
+                        strokeWidth={3} 
+                        dot={{ fill: "#ef4444", r: 4 }}
+                        activeDot={{ r: 8, fill: "#ef4444" }}
+                        isAnimationActive={true}
+                        connectNulls={true}
+                      />
+                    )}
                   </ComposedChart>
                 </ResponsiveContainer>
              </div>
