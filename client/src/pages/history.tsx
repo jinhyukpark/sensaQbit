@@ -197,12 +197,54 @@ const generateTableData = (count: number) => {
 
 const initialTableData = generateTableData(20);
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Area, AreaChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+
+// Mock DRT Data Generator
+const generateDRTData = () => {
+  const points = [];
+  let currentValue = 50;
+  for (let i = 0; i < 60; i++) {
+    // Create some phases/segments
+    if (i === 10) currentValue = 80;
+    if (i === 15) currentValue = 70;
+    if (i === 30) currentValue = 20;
+    if (i === 45) currentValue = 60;
+    
+    // Add noise
+    currentValue += (Math.random() - 0.5) * 5;
+    
+    // Calculate range (band)
+    const bandWidth = i > 10 && i < 25 ? 15 : 5; // Wider band during transient
+    
+    points.push({
+      time: i,
+      value: currentValue,
+      min: currentValue - bandWidth,
+      max: currentValue + bandWidth,
+      range: [currentValue - bandWidth, currentValue + bandWidth]
+    });
+  }
+  return points;
+};
+
+const drtData = generateDRTData();
+
 export default function HistoryPage() {
   const [selectedNode, setSelectedNode] = useState<string | null>("eq-1");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   // Default select some sensors to show data immediately
   const [selectedSensors, setSelectedSensors] = useState<string[]>(["temp-0", "temp-1"]);
   const [filterStatus, setFilterStatus] = useState<"all" | "fault">("all");
+  
+  const [selectedSensorForChart, setSelectedSensorForChart] = useState<any>(null);
   
   // Right Sidebar State
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
@@ -719,9 +761,17 @@ export default function HistoryPage() {
                                 )}
                                 {visibleColumns.location && (
                                   <div className="px-4 py-3 border-r border-border/50 h-full flex items-center truncate">
-                                    <Badge variant="outline" className="font-normal bg-slate-50 text-slate-600">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-6 text-xs font-mono bg-muted/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors px-2"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedSensorForChart(row);
+                                      }}
+                                    >
                                       {row.location}
-                                    </Badge>
+                                    </Button>
                                   </div>
                                 )}
                                 {visibleColumns.section && (
@@ -1004,6 +1054,107 @@ export default function HistoryPage() {
 
         </ResizablePanelGroup>
       </div>
+      {/* DRT Chart Dialog */}
+      <Dialog open={!!selectedSensorForChart} onOpenChange={(open) => !open && setSelectedSensorForChart(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-primary" />
+              Dynamic Response Trend (DRT) Analysis
+            </DialogTitle>
+            <DialogDescription>
+              Real-time sensor behavior analysis for <span className="font-mono font-medium text-foreground">{selectedSensorForChart?.location}</span>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+             {/* Chart Header Info */}
+             <div className="flex items-center justify-between bg-muted/30 p-3 rounded-lg border">
+                <div className="grid grid-cols-4 gap-8">
+                   <div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Current Value</div>
+                      <div className="text-xl font-bold font-mono">54.2 <span className="text-xs text-muted-foreground font-normal">mV</span></div>
+                   </div>
+                   <div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Signal Stability</div>
+                      <div className="text-xl font-bold text-emerald-600">99.8%</div>
+                   </div>
+                   <div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Noise Floor</div>
+                      <div className="text-xl font-bold text-muted-foreground">-92 dBm</div>
+                   </div>
+                   <div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Status</div>
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Optimal</Badge>
+                   </div>
+                </div>
+             </div>
+
+             {/* Chart */}
+             <div className="h-[400px] w-full border rounded-lg bg-card p-4 relative">
+                <div className="absolute top-4 right-4 z-10 flex gap-2">
+                   <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">Tolerance Band</Badge>
+                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Actual Signal</Badge>
+                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={drtData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                    <defs>
+                      <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} stroke="hsl(var(--border))" opacity={0.5} />
+                    <XAxis 
+                       dataKey="time" 
+                       type="number" 
+                       domain={[0, 60]} 
+                       tickCount={12} 
+                       stroke="hsl(var(--muted-foreground))" 
+                       fontSize={12}
+                       label={{ value: 'Time Sequence (s)', position: 'insideBottomRight', offset: -10, fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                       domain={[0, 100]} 
+                       stroke="hsl(var(--muted-foreground))" 
+                       fontSize={12}
+                       label={{ value: 'Response Amplitude', angle: -90, position: 'insideLeft', fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: 'var(--radius)' }}
+                      labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
+                    />
+                    
+                    {/* Tolerance Band Area */}
+                    <Area 
+                      type="stepAfter" 
+                      dataKey="range" 
+                      stroke="none" 
+                      fill="#3b82f6" 
+                      fillOpacity={0.15} 
+                      isAnimationActive={true}
+                    />
+
+                    {/* Actual Signal Line */}
+                    <Line 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#10b981" 
+                      strokeWidth={2} 
+                      dot={false} 
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                      isAnimationActive={true}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+             </div>
+          </div>
+          <DialogFooter>
+             <Button variant="outline" onClick={() => setSelectedSensorForChart(null)}>Close Analysis</Button>
+             <Button>Export Report</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
