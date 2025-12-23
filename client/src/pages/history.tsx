@@ -499,7 +499,7 @@ export default function HistoryPage() {
                   </div>
 
                   {/* 2. Sensor Grid Selection */}
-                  <div className="grid grid-cols-3 gap-2 p-4 bg-muted/30 rounded-lg border">
+                  <div className="grid grid-cols-4 gap-2 p-4 bg-muted/30 rounded-lg border max-h-[240px] overflow-y-auto">
                     {currentSensors.length > 0 ? (
                       currentSensors.map((sensor) => (
                         <div key={sensor.id} className="flex items-center space-x-2 p-2 hover:bg-background rounded border border-transparent hover:border-border transition-colors">
