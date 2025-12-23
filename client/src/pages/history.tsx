@@ -235,15 +235,29 @@ const generateDRTData = (isDefective = false) => {
     // Inject Fault if defective
     // We add the fault offset to the ACTUAL value, but leave the BAND alone
     let actualValue = currentValue + noise;
-    let isAnomaly = false;
     
     if (isDefective) {
-      // Create a spike/drift anomaly around index 35-42
-      if (i >= 35 && i <= 42) {
-         actualValue = actualValue + 35; // Significant deviation pushing it well outside the band
-         isAnomaly = true;
+      // Create a ramped spike anomaly around index 32-45
+      if (i >= 32 && i <= 45) {
+         let offset = 0;
+         // Ramp up
+         if (i < 36) {
+           offset = (i - 31) * 8; // 8, 16, 24, 32
+         } 
+         // Plateau
+         else if (i <= 41) {
+           offset = 35;
+         }
+         // Ramp down
+         else {
+           offset = (45 - i) * 8; // 24, 16, 8
+         }
+         
+         actualValue = currentValue + offset + noise;
       }
     }
+
+    const isAnomaly = actualValue > max || actualValue < min;
 
     points.push({
       time: i,
@@ -252,9 +266,32 @@ const generateDRTData = (isDefective = false) => {
       max: max,
       range: [min, max],
       isAnomaly,
-      anomalyValue: isAnomaly ? actualValue : null 
+      // We will set anomalyValue in a second pass to ensure connected lines
+      anomalyValue: null
     });
   }
+  
+  // Second pass: Connect anomaly lines
+  // If a point is an anomaly, we want the line connecting to it to be red.
+  // We include the previous and next points in the "anomaly" dataset to draw the full transition.
+  for (let i = 0; i < points.length; i++) {
+    const p = points[i];
+    const prev = points[i-1];
+    const next = points[i+1];
+    
+    if (p.isAnomaly) {
+      p.anomalyValue = p.value;
+      // Connect backward to start of violation
+      if (prev && !prev.isAnomaly) {
+        prev.anomalyValue = prev.value;
+      }
+      // Connect forward to end of violation
+      if (next && !next.isAnomaly) {
+        next.anomalyValue = next.value;
+      }
+    }
+  }
+
   return points;
 };
 
