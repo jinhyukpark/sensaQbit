@@ -205,7 +205,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Area, AreaChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, ComposedChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceArea } from "recharts";
 
 // Mock DRT Data Generator
 const generateDRTData = (isDefective = false) => {
@@ -213,29 +213,35 @@ const generateDRTData = (isDefective = false) => {
   let currentValue = 50;
   
   for (let i = 0; i < 60; i++) {
-    // Create some phases/segments
-    if (i === 10) currentValue = 80;
-    if (i === 15) currentValue = 70;
-    if (i === 30) currentValue = 20;
-    if (i === 45) currentValue = 60;
+    // Smooth transitions for "rising/falling" lines
+    // Instead of instant jumps, we drift towards target values
+    let target = 50;
+    if (i >= 10 && i < 15) target = 80;
+    else if (i >= 15 && i < 30) target = 70;
+    else if (i >= 30 && i < 45) target = 20;
+    else if (i >= 45) target = 60;
+    
+    // Move current value towards target (smoothing)
+    currentValue = currentValue + (target - currentValue) * 0.4;
     
     // Add noise
-    currentValue += (Math.random() - 0.5) * 5;
+    const noise = (Math.random() - 0.5) * 5;
+    const noisyValue = currentValue + noise;
     
-    // Calculate range (band)
-    const bandWidth = i > 10 && i < 25 ? 15 : 5; // Wider band during transient
+    // Calculate range (band) that follows the trend
+    const bandWidth = 10; 
     
-    let min = currentValue - bandWidth;
-    let max = currentValue + bandWidth;
+    let min = noisyValue - bandWidth;
+    let max = noisyValue + bandWidth;
     
     // Inject Fault if defective
-    let actualValue = currentValue;
+    let actualValue = noisyValue;
     let isAnomaly = false;
     
     if (isDefective) {
       // Create a spike/drift anomaly around index 35-42
       if (i >= 35 && i <= 42) {
-         actualValue = currentValue + 25; // Significant deviation
+         actualValue = noisyValue + 25; // Significant deviation
          isAnomaly = true;
       }
     }
@@ -267,8 +273,39 @@ export default function HistoryPage() {
     return generateDRTData(selectedSensorForChart.isDefective);
   }, [selectedSensorForChart]);
   
-  // Right Sidebar State
   const [isDetailsOpen, setIsDetailsOpen] = useState(true);
+
+  // Chart Selection State
+  const [refAreaLeft, setRefAreaLeft] = useState<number | null>(null);
+  const [refAreaRight, setRefAreaRight] = useState<number | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
+  
+  // Mock List of "Sensors in Area"
+  const [sensorsInArea, setSensorsInArea] = useState<any[]>([]);
+
+  const handleSelection = () => {
+    if (refAreaLeft === null || refAreaRight === null) return;
+    
+    // Ensure left is smaller
+    const left = Math.min(refAreaLeft, refAreaRight);
+    const right = Math.max(refAreaLeft, refAreaRight);
+    
+    if (right - left < 1) {
+      setRefAreaLeft(null);
+      setRefAreaRight(null);
+      setSensorsInArea([]);
+      return;
+    }
+
+    // Mock finding sensors in this time range
+    // In a real app, we'd query the backend for sensors with events in [left, right]
+    const mockFound = [
+      { id: "s1", name: "Temp Sensor A1", value: "85.2°C", status: "Critical", time: left + 2 },
+      { id: "s2", name: "Pressure Gauge P2", value: "1200 PSI", status: "Warning", time: left + 5 },
+      { id: "s3", name: "Flow Meter F5", value: "45.0 L/m", status: "Normal", time: right - 2 },
+    ];
+    setSensorsInArea(mockFound);
+  };
 
   // Toolbar State
   const [searchQuery, setSearchQuery] = useState("");
@@ -1118,7 +1155,7 @@ export default function HistoryPage() {
              </div>
 
              {/* Chart */}
-             <div className="h-[400px] w-full border rounded-lg bg-card p-4 relative">
+             <div className="h-[400px] w-full border rounded-lg bg-card p-4 relative select-none">
                 <div className="absolute top-4 right-4 z-10 flex gap-2">
                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">Tolerance Band</Badge>
                    <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Actual Signal</Badge>
@@ -1127,7 +1164,26 @@ export default function HistoryPage() {
                    )}
                 </div>
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={drtData} margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                  <ComposedChart 
+                    data={drtData} 
+                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                    onMouseDown={(e) => {
+                       if(e && e.activeLabel) {
+                         setRefAreaLeft(Number(e.activeLabel));
+                         setIsSelecting(true);
+                         setSensorsInArea([]); // Clear previous selection
+                       }
+                    }}
+                    onMouseMove={(e) => {
+                       if(isSelecting && e && e.activeLabel) {
+                         setRefAreaRight(Number(e.activeLabel));
+                       }
+                    }}
+                    onMouseUp={(e) => {
+                       setIsSelecting(false);
+                       handleSelection();
+                    }}
+                  >
                     <defs>
                       <linearGradient id="splitColor" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
@@ -1143,21 +1199,23 @@ export default function HistoryPage() {
                        stroke="hsl(var(--muted-foreground))" 
                        fontSize={12}
                        label={{ value: 'Time Sequence (s)', position: 'insideBottomRight', offset: -10, fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                       allowDataOverflow={true}
                     />
                     <YAxis 
                        domain={[0, 100]} 
                        stroke="hsl(var(--muted-foreground))" 
                        fontSize={12}
                        label={{ value: 'Response Amplitude', angle: -90, position: 'insideLeft', fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                       allowDataOverflow={true}
                     />
                     <Tooltip 
                       contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))', borderRadius: 'var(--radius)' }}
                       labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
                     />
                     
-                    {/* Tolerance Band Area */}
+                    {/* Tolerance Band Area - Monotone for smooth envelope */}
                     <Area 
-                      type="stepAfter" 
+                      type="monotone" 
                       dataKey="range" 
                       stroke="none" 
                       fill="#3b82f6" 
@@ -1189,9 +1247,56 @@ export default function HistoryPage() {
                         connectNulls={true}
                       />
                     )}
+
+                    {/* Selection Area */}
+                    { (refAreaLeft !== null && refAreaRight !== null) && (
+                      <ReferenceArea 
+                        x1={refAreaLeft} 
+                        x2={refAreaRight} 
+                        strokeOpacity={0.3} 
+                        fill="#8884d8" 
+                        fillOpacity={0.3} 
+                      />
+                    )}
                   </ComposedChart>
                 </ResponsiveContainer>
              </div>
+             
+             {/* Selected Range Info */}
+             {sensorsInArea.length > 0 && (
+               <div className="bg-muted/20 border rounded-lg p-4 animate-in fade-in slide-in-from-top-2">
+                 <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                   <ListFilter className="w-4 h-4 text-primary" />
+                   Sensors in Selected Range ({Math.min(Number(refAreaLeft), Number(refAreaRight))}s - {Math.max(Number(refAreaLeft), Number(refAreaRight))}s)
+                 </h4>
+                 <div className="grid gap-2">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent">
+                          <TableHead className="h-8 text-xs">Sensor Name</TableHead>
+                          <TableHead className="h-8 text-xs">Value</TableHead>
+                          <TableHead className="h-8 text-xs">Time Offset</TableHead>
+                          <TableHead className="h-8 text-xs text-right">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sensorsInArea.map((sensor) => (
+                          <TableRow key={sensor.id} className="hover:bg-muted/50">
+                            <TableCell className="py-2 text-xs font-medium">{sensor.name}</TableCell>
+                            <TableCell className="py-2 text-xs font-mono">{sensor.value}</TableCell>
+                            <TableCell className="py-2 text-xs text-muted-foreground">T+{sensor.time}s</TableCell>
+                            <TableCell className="py-2 text-xs text-right">
+                              <Badge variant={sensor.status === 'Critical' ? 'destructive' : sensor.status === 'Warning' ? 'outline' : 'secondary'} className="text-[10px] h-5">
+                                {sensor.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                 </div>
+               </div>
+             )}
           </div>
           <DialogFooter>
              <Button variant="outline" onClick={() => setSelectedSensorForChart(null)}>Close Analysis</Button>
