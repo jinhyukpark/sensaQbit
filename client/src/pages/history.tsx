@@ -214,7 +214,6 @@ const generateDRTData = (isDefective = false) => {
   
   for (let i = 0; i < 60; i++) {
     // Smooth transitions for "rising/falling" lines
-    // Instead of instant jumps, we drift towards target values
     let target = 50;
     if (i >= 10 && i < 15) target = 80;
     else if (i >= 15 && i < 30) target = 70;
@@ -226,22 +225,22 @@ const generateDRTData = (isDefective = false) => {
     
     // Add noise
     const noise = (Math.random() - 0.5) * 5;
-    const noisyValue = currentValue + noise;
     
-    // Calculate range (band) that follows the trend
+    // Calculate range (band) based on the EXPECTED trend, not the actual faulty value
+    // This ensures the band stays "normal" even when signal spikes
     const bandWidth = 10; 
-    
-    let min = noisyValue - bandWidth;
-    let max = noisyValue + bandWidth;
+    let min = currentValue - bandWidth;
+    let max = currentValue + bandWidth;
     
     // Inject Fault if defective
-    let actualValue = noisyValue;
+    // We add the fault offset to the ACTUAL value, but leave the BAND alone
+    let actualValue = currentValue + noise;
     let isAnomaly = false;
     
     if (isDefective) {
       // Create a spike/drift anomaly around index 35-42
       if (i >= 35 && i <= 42) {
-         actualValue = noisyValue + 25; // Significant deviation
+         actualValue = actualValue + 35; // Significant deviation pushing it well outside the band
          isAnomaly = true;
       }
     }
@@ -253,7 +252,7 @@ const generateDRTData = (isDefective = false) => {
       max: max,
       range: [min, max],
       isAnomaly,
-      anomalyValue: isAnomaly ? actualValue : null // For red line overlay
+      anomalyValue: isAnomaly ? actualValue : null 
     });
   }
   return points;
@@ -1240,8 +1239,8 @@ export default function HistoryPage() {
                         type="monotone" 
                         dataKey="anomalyValue" 
                         stroke="#ef4444" 
-                        strokeWidth={3} 
-                        dot={{ fill: "#ef4444", r: 4 }}
+                        strokeWidth={4} 
+                        dot={false}
                         activeDot={{ r: 8, fill: "#ef4444" }}
                         isAnimationActive={true}
                         connectNulls={true}
